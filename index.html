@@ -4,100 +4,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NUST Events & Society Portal</title>
-    <meta name="description" content="Dark-themed event portal mockup for OOP End Semester Project by Abdullah Rauf, BSDS-3A SEECS NUST.">
+    <meta name="description" content="Logic-first web GUI for NUST Events and Society Portal.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="hero shell">
-        <div class="hero-copy reveal-up">
-            <p class="eyebrow">OOP End Semester Project</p>
+    <header class="shell topbar">
+        <div>
+            <p class="tag">OOP End Semester Project</p>
             <h1>NUST Events & Society Portal</h1>
-            <p class="subtitle">
-                Built by Abdullah Rauf (BSDS-3A, SEECS, NUST). Students can discover and join campus events,
-                while organizers manage attendees with a role-based workflow.
-            </p>
-            <div class="hero-meta">
-                <span>Terminal App Concept</span>
-                <span>Web Frontend Prototype</span>
-                <span>Vercel Ready</span>
-            </div>
+            <p class="muted">Logic-first GUI version of your Java terminal app.</p>
         </div>
-        <div class="hero-stats reveal-up delay-1">
-            <article>
-                <h2>11</h2>
-                <p>Java Files</p>
-            </article>
-            <article>
-                <h2>8</h2>
-                <p>Societies</p>
-            </article>
-            <article>
-                <h2>4</h2>
-                <p>Live Events</p>
-            </article>
-            <article>
-                <h2>3</h2>
-                <p>User Roles</p>
-            </article>
-        </div>
+        <div class="stats" id="portalStats"></div>
     </header>
 
     <main class="shell">
-        <section class="controls reveal-up delay-2" aria-label="Event controls">
-            <div class="field-wrap">
-                <label for="searchInput">Search events</label>
-                <input id="searchInput" type="search" placeholder="Search by title, society, venue or type">
+        <section class="panel">
+            <h2>Events Browser</h2>
+            <div class="toolbar">
+                <label>
+                    Search
+                    <input id="searchInput" type="search" placeholder="title, society, type">
+                </label>
+                <label>
+                    Type
+                    <select id="typeFilter">
+                        <option value="all">All</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="concert">Concert</option>
+                        <option value="competition">Competition</option>
+                        <option value="seminar">Seminar</option>
+                    </select>
+                </label>
+                <label>
+                    Society
+                    <select id="societyFilter">
+                        <option value="all">All</option>
+                    </select>
+                </label>
+                <button id="resetFiltersBtn" type="button">Reset</button>
             </div>
-            <div class="field-wrap">
-                <label for="typeFilter">Type</label>
-                <select id="typeFilter">
-                    <option value="all">All Types</option>
-                    <option value="concert">Concert</option>
-                    <option value="competition">Competition</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="seminar">Seminar</option>
-                </select>
+            <p class="muted" id="resultCounter">Showing 0 events</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Society</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Venue</th>
+                            <th>Seats Left</th>
+                            <th>Reviews</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTableBody"></tbody>
+                </table>
             </div>
-            <div class="field-wrap">
-                <label for="statusFilter">Status</label>
-                <select id="statusFilter">
-                    <option value="all">All Status</option>
-                    <option value="delayed">Delayed</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="expected">Expected</option>
-                </select>
-            </div>
-            <button id="resetFiltersBtn" type="button" class="ghost-btn">Reset</button>
         </section>
 
-        <section class="section-head reveal-up delay-3">
-            <h2>Featured Events</h2>
-            <p id="resultCounter">Showing 0 events</p>
-        </section>
-
-        <section id="eventGrid" class="event-grid" aria-live="polite"></section>
-
-        <section class="roles reveal-up delay-4">
+        <section class="panel">
+            <h2>Portal Role</h2>
             <div class="role-tabs" role="tablist" aria-label="Portal roles">
-                <button class="role-tab active" role="tab" aria-selected="true" data-role="guest">Guest</button>
-                <button class="role-tab" role="tab" aria-selected="false" data-role="student">Student</button>
-                <button class="role-tab" role="tab" aria-selected="false" data-role="organizer">Organizer</button>
+                <button class="role-tab active" data-role="guest" type="button">Guest</button>
+                <button class="role-tab" data-role="student" type="button">Student</button>
+                <button class="role-tab" data-role="organizer" type="button">Organizer</button>
             </div>
-            <article id="rolePanel" class="role-panel" aria-live="polite"></article>
+
+            <article id="guestPanel" class="role-panel active">
+                <h3>Guest Actions</h3>
+                <ul>
+                    <li>Browse all events from the table</li>
+                    <li>Filter by category and society</li>
+                    <li>Search by title, type, or society</li>
+                </ul>
+            </article>
+
+            <article id="studentPanel" class="role-panel">
+                <h3>Student</h3>
+                <div class="grid-two">
+                    <form id="studentRegisterForm" class="panel-inner">
+                        <h4>Register Account</h4>
+                        <input name="name" placeholder="Full Name" required>
+                        <input name="cmsId" placeholder="CMS ID" required>
+                        <input name="email" type="email" placeholder="Email" required>
+                        <input name="password" type="password" placeholder="Password" required>
+                        <input name="section" placeholder="Section (e.g. BSDS-3A)" required>
+                        <button type="submit">Register</button>
+                    </form>
+
+                    <form id="studentLoginForm" class="panel-inner">
+                        <h4>Login</h4>
+                        <input name="cmsId" placeholder="CMS ID" required>
+                        <input name="password" type="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                        <p id="studentSessionLabel" class="muted">Not logged in</p>
+                    </form>
+                </div>
+
+                <div id="studentActions" class="panel-inner hidden">
+                    <h4>Student Dashboard</h4>
+                    <div class="grid-two">
+                        <label>
+                            Event
+                            <select id="studentEventSelect"></select>
+                        </label>
+                        <div class="button-row">
+                            <button type="button" id="registerEventBtn">Register</button>
+                            <button type="button" id="cancelEventBtn">Cancel</button>
+                            <button type="button" id="viewReviewsBtn">Reviews</button>
+                        </div>
+                    </div>
+
+                    <div class="grid-two">
+                        <input id="reviewText" placeholder="Your feedback">
+                        <select id="reviewRating">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5" selected>5</option>
+                        </select>
+                    </div>
+                    <div class="button-row">
+                        <button type="button" id="submitReviewBtn">Submit Review</button>
+                        <button type="button" id="profileBtn">My Profile</button>
+                        <button type="button" id="upcomingBtn">Upcoming</button>
+                        <button type="button" id="studentLogoutBtn">Logout</button>
+                    </div>
+                </div>
+            </article>
+
+            <article id="organizerPanel" class="role-panel">
+                <h3>Organizer</h3>
+                <form id="organizerLoginForm" class="panel-inner">
+                    <h4>Organizer Login</h4>
+                    <label>
+                        Society
+                        <select id="organizerSocietySelect"></select>
+                    </label>
+                    <input name="password" type="password" placeholder="Society Password" required>
+                    <button type="submit">Login</button>
+                    <p id="organizerSessionLabel" class="muted">Not logged in</p>
+                </form>
+
+                <div id="organizerActions" class="panel-inner hidden">
+                    <h4>Organizer Dashboard</h4>
+                    <div class="button-row">
+                        <button type="button" id="myEventsBtn">View My Events</button>
+                        <button type="button" id="attendeesBtn">View Attendees</button>
+                        <button type="button" id="organizerLogoutBtn">Logout</button>
+                    </div>
+
+                    <form id="addEventForm" class="add-event-form">
+                        <h5>Add New Event</h5>
+                        <div class="grid-two">
+                            <select id="newEventType" required>
+                                <option value="workshop">Workshop</option>
+                                <option value="concert">Concert</option>
+                                <option value="competition">Competition</option>
+                                <option value="seminar">Seminar</option>
+                            </select>
+                            <input id="newEventTitle" placeholder="Title" required>
+                            <input id="newEventDate" placeholder="Date (e.g. 25-Apr-2026)" required>
+                            <input id="newEventVenue" placeholder="Venue" required>
+                            <input id="newEventCapacity" type="number" min="1" placeholder="Capacity" required>
+                            <input id="newEventDescription" placeholder="Description" required>
+                            <input id="newEventExtra1" placeholder="Extra field 1" required>
+                            <input id="newEventExtra2" placeholder="Extra field 2" required>
+                        </div>
+                        <button type="submit">Add Event</button>
+                    </form>
+                </div>
+            </article>
         </section>
 
-        <section class="societies reveal-up delay-5">
-            <h2>Pre-loaded Societies</h2>
-            <div id="societyList" class="society-list"></div>
+        <section class="panel">
+            <h2>Console Output</h2>
+            <pre id="consoleOutput" class="console">Ready.</pre>
         </section>
     </main>
 
     <footer class="footer shell">
         <p>Course: OOP End Semester Project | SEECS NUST</p>
-        <p>Designed for static deployment on Vercel</p>
+        <p>Frontend focused on parity with Java logic</p>
     </footer>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
