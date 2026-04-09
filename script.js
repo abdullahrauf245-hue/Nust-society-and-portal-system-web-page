@@ -1,6 +1,6 @@
 const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
 const SUPABASE_URL = "https://snzbxtwltqysdpdirsce.supabase.co";
-const SUPABASE_ANON_KEY = "<SECRET>";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuemJ4dHdsdHF5c2RwZGlyc2NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTcyNDksImV4cCI6MjA5MTMzMzI0OX0.akjrFaY5UNAdqZdJbzUm_D0pzdYG7sQegqD3jJzpj5g";
 const ALLOWED_DOMAIN_HINT = "@*.nust.edu.pk or @seecs.edu.pk";
 const ALLOWED_NUST_PATTERNS = [
     /^[^@\s]+@([a-z0-9-]+\.)*nust\.edu\.pk$/i,
