@@ -70,9 +70,9 @@
         <section class="panel">
             <h2>Portal Role</h2>
             <div class="role-tabs" role="tablist" aria-label="Portal roles">
-                <button class="role-tab active" data-role="guest" type="button">Guest</button>
-                <button class="role-tab" data-role="student" type="button">Student</button>
-                <button class="role-tab" data-role="organizer" type="button">Organizer</button>
+                <button class="role-tab active" data-role="guest" type="button" onclick="setRole('guest')">Guest</button>
+                <button class="role-tab" data-role="student" type="button" onclick="setRole('student')">Student</button>
+                <button class="role-tab" data-role="organizer" type="button" onclick="setRole('organizer')">Organizer</button>
             </div>
 
             <article id="guestPanel" class="role-panel active">

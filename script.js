@@ -927,6 +927,10 @@ function bindEvents() {
 }
 
 async function bootstrap() {
+    bindEvents();
+    updateAddEventFieldHints();
+    setRole("guest");
+
     if (!window.supabase || !window.supabase.createClient) {
         writeConsole("Supabase SDK failed to load.");
         showToast("Supabase SDK missing");
@@ -934,10 +938,6 @@ async function bootstrap() {
     }
 
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    bindEvents();
-    updateAddEventFieldHints();
-    setRole("guest");
 
     await restoreStudentSession();
     updateStudentSessionUI();
