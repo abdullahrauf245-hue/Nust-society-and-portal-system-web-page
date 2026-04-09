@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUST Events Portal | Phase 2</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <aside class="sidebar glass">
+            <div class="logo-area">
+                <div class="nust-logo-sim"></div>
+                <h2>NUST Portal</h2>
+            </div>
+            <nav>
+                <a href="#" class="nav-item active" id="nav-dashboard" onclick="showSection('dashboard')">Dashboard</a>
+                <a href="#" class="nav-item" id="nav-admin" onclick="showSection('admin')">Society Admin</a>
+            </nav>
+            <div class="user-card">
+                <p>Muhammad Abdullah</p>
+                <span>BSDS-3A</span>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            
+            <section id="dashboard" class="page-section active">
+                <header class="main-header">
+                    <h1>Explore Events</h1>
+                    <div class="search-bar glass">
+                        <input type="text" placeholder="Search events...">
+                    </div>
+                </header>
+                <div class="bento-grid" id="eventGrid">
+                    </div>
+            </section>
+
+            <section id="admin" class="page-section">
+                <div class="admin-form-wrapper glass">
+                    <h2>Society Organizer Panel</h2>
+                    <form id="createEventForm" class="grid-form">
+                        <div class="form-group full">
+                            <label>Event Title</label>
+                            <input type="text" id="formTitle" placeholder="e.g. Speed Programming 2.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Event Type</label>
+                            <select id="formType">
+                                <option value="Workshop">Workshop</option>
+                                <option value="Concert">Concert</option>
+                                <option value="Competition">Competition</option>
+                                <option value="Seminar">Seminar</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Capacity</label>
+                            <input type="number" id="formCapacity" placeholder="Max Seats" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>Venue</label>
+                            <input type="text" id="formVenue" placeholder="e.g. SEECS Auditorium" required>
+                        </div>
+                        <button type="button" class="btn-submit" onclick="handleCreateEvent()">Launch Event 🚀</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
