@@ -70,10 +70,11 @@
         <section class="panel">
             <h2>Portal Role</h2>
             <div class="role-tabs" role="tablist" aria-label="Portal roles">
-                <button class="role-tab active" data-role="guest" type="button" onclick="setRole('guest')">Guest</button>
-                <button class="role-tab" data-role="student" type="button" onclick="setRole('student')">Student</button>
-                <button class="role-tab" data-role="organizer" type="button" onclick="setRole('organizer')">Organizer</button>
+                <button class="role-tab active" data-role="guest" type="button" onclick="document.querySelectorAll('.role-tab').forEach(function(b){b.classList.remove('active');}); this.classList.add('active'); document.querySelectorAll('.role-panel').forEach(function(p){p.classList.remove('active');}); document.getElementById('guestPanel').classList.add('active'); var dbg=document.getElementById('roleDebug'); if(dbg){dbg.textContent='Debug: active role = guest | ' + new Date().toLocaleTimeString();}">Guest</button>
+                <button class="role-tab" data-role="student" type="button" onclick="document.querySelectorAll('.role-tab').forEach(function(b){b.classList.remove('active');}); this.classList.add('active'); document.querySelectorAll('.role-panel').forEach(function(p){p.classList.remove('active');}); document.getElementById('studentPanel').classList.add('active'); var dbg=document.getElementById('roleDebug'); if(dbg){dbg.textContent='Debug: active role = student | ' + new Date().toLocaleTimeString();}">Student</button>
+                <button class="role-tab" data-role="organizer" type="button" onclick="document.querySelectorAll('.role-tab').forEach(function(b){b.classList.remove('active');}); this.classList.add('active'); document.querySelectorAll('.role-panel').forEach(function(p){p.classList.remove('active');}); document.getElementById('organizerPanel').classList.add('active'); var dbg=document.getElementById('roleDebug'); if(dbg){dbg.textContent='Debug: active role = organizer | ' + new Date().toLocaleTimeString();}">Organizer</button>
             </div>
+            <p id="roleDebug" class="role-debug">Debug: active role = guest</p>
 
             <article id="guestPanel" class="role-panel active">
                 <h3>Guest Actions</h3>
@@ -87,14 +88,14 @@
             <article id="studentPanel" class="role-panel">
                 <h3>Student</h3>
                 <div class="grid-two">
-                    <form id="studentOtpRequestForm" class="panel-inner">
+                    <form id="studentOtpRequestForm" class="panel-inner" onsubmit="event.preventDefault();">
                         <h4>Email OTP Login</h4>
                         <input id="studentEmail" type="email" placeholder="School Email" required>
                         <p class="muted">Allowed domains: all NUST school domains</p>
                         <button type="submit">Send OTP</button>
                     </form>
 
-                    <form id="studentOtpVerifyForm" class="panel-inner">
+                    <form id="studentOtpVerifyForm" class="panel-inner" onsubmit="event.preventDefault();">
                         <h4>Verify OTP</h4>
                         <input id="studentOtpCode" placeholder="6-digit code" required>
                         <button type="submit">Verify</button>
@@ -102,7 +103,7 @@
                     </form>
                 </div>
 
-                <form id="studentProfileForm" class="panel-inner hidden">
+                <form id="studentProfileForm" class="panel-inner hidden" onsubmit="event.preventDefault();">
                     <h4>Complete Student Profile</h4>
                     <div class="grid-two">
                         <input id="profileName" placeholder="Full Name" required>
@@ -147,7 +148,7 @@
 
             <article id="organizerPanel" class="role-panel">
                 <h3>Organizer</h3>
-                <form id="organizerLoginForm" class="panel-inner">
+                <form id="organizerLoginForm" class="panel-inner" onsubmit="event.preventDefault();">
                     <h4>Organizer Login</h4>
                     <label>
                         Society
@@ -166,7 +167,7 @@
                         <button type="button" id="organizerLogoutBtn">Logout</button>
                     </div>
 
-                    <form id="addEventForm" class="add-event-form">
+                    <form id="addEventForm" class="add-event-form" onsubmit="event.preventDefault();">
                         <h5>Add New Event</h5>
                         <div class="grid-two">
                             <select id="newEventType" required>

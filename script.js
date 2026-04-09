@@ -7,11 +7,78 @@ const ALLOWED_NUST_PATTERNS = [
     /^[^@\s]+@seecs\.edu\.pk$/i
 ];
 
+const FALLBACK_SOCIETIES = [
+    { id: "soc-1", name: "NUST Music Society", category: "Cultural", password: "nms123" },
+    { id: "soc-2", name: "RIC", category: "Fundraiser", password: "ric123" },
+    { id: "soc-3", name: "NEC", category: "Technical", password: "nec123" },
+    { id: "soc-4", name: "ACM", category: "Technical", password: "acm123" },
+    { id: "soc-5", name: "Vyro.ai", category: "Technical", password: "vyro123" },
+    { id: "soc-6", name: "IEEE", category: "Technical", password: "ieee123" },
+    { id: "soc-7", name: "SOULS", category: "Cultural", password: "souls123" },
+    { id: "soc-8", name: "AND", category: "Technical", password: "and123" }
+];
+
+const FALLBACK_EVENTS = [
+    {
+        id: "evt-1",
+        title: "NUST Music Fest (NMF)",
+        type: "concert",
+        society_id: "soc-1",
+        society_name: "NUST Music Society",
+        date: "DELAYED - Originally 21-22 Apr 2026",
+        venue: "NUST Amphitheatre",
+        capacity: 500,
+        description: "NUST annual music festival.",
+        status: "delayed",
+        registration_url: ""
+    },
+    {
+        id: "evt-2",
+        title: "HAAMI 2026",
+        type: "concert",
+        society_id: "soc-2",
+        society_name: "RIC",
+        date: "DELAYED - Originally 2-3 Apr 2026",
+        venue: "NUST Main Campus",
+        capacity: 1000,
+        description: "Fundraiser with Hassan Raheem.",
+        status: "delayed",
+        registration_url: ""
+    },
+    {
+        id: "evt-3",
+        title: "AIcon 2026",
+        type: "competition",
+        society_id: "soc-3",
+        society_name: "NEC",
+        date: "Expected: End of April 2026",
+        venue: "SEECS, NUST",
+        capacity: 150,
+        description: "AI-focused hackathon.",
+        status: "expected",
+        registration_url: ""
+    },
+    {
+        id: "evt-4",
+        title: "VYROTHON 2026",
+        type: "competition",
+        society_id: "soc-5",
+        society_name: "Vyro.ai",
+        date: "18-Apr-2026",
+        venue: "Vyro Office, NSTP NUST H-12",
+        capacity: 100,
+        description: "In-house hackathon with around $5000 prize pool.",
+        status: "scheduled",
+        registration_url: "https://vyrothon.vyro.ai/"
+    }
+];
+
 let supabase = null;
 let allSocieties = [];
 let allEvents = [];
 let registrationCounts = new Map();
 let reviewAgg = new Map();
+let usingLocalFallback = false;
 
 let loggedInStudentUser = null;
 let loggedInStudentProfile = null;
@@ -27,6 +94,7 @@ const resultCounter = document.getElementById("resultCounter");
 const portalStats = document.getElementById("portalStats");
 const consoleOutput = document.getElementById("consoleOutput");
 const toastEl = document.getElementById("toast");
+const roleDebug = document.getElementById("roleDebug");
 
 const studentOtpRequestForm = document.getElementById("studentOtpRequestForm");
 const studentOtpVerifyForm = document.getElementById("studentOtpVerifyForm");
@@ -84,6 +152,10 @@ function setRole(role) {
     if (role === "guest") document.getElementById("guestPanel").classList.add("active");
     if (role === "student") document.getElementById("studentPanel").classList.add("active");
     if (role === "organizer") document.getElementById("organizerPanel").classList.add("active");
+
+    if (roleDebug) {
+        roleDebug.textContent = "Debug: active role = " + role + " | " + new Date().toLocaleTimeString();
+    }
 }
 
 function updateAddEventFieldHints() {
@@ -125,6 +197,14 @@ function getAverageRating(eventId) {
         return 0;
     }
     return metric.sum / metric.count;
+}
+
+function applyLocalFallbackData() {
+    usingLocalFallback = true;
+    allSocieties = FALLBACK_SOCIETIES.map((society) => ({ ...society }));
+    allEvents = FALLBACK_EVENTS.map((event) => ({ ...event }));
+    registrationCounts = new Map();
+    reviewAgg = new Map();
 }
 
 function getFilteredEvents() {
@@ -371,10 +451,22 @@ async function loadStudentProfile() {
 
 async function refreshViews() {
     try {
+        usingLocalFallback = false;
         await loadSocieties();
         await loadEvents();
         await loadMetrics();
         const studentCount = await loadProfilesCount();
+
+        if (!allEvents.length || !allSocieties.length) {
+            applyLocalFallbackData();
+            writeConsole("No Supabase seed data found. Showing local demo events.");
+            renderOrganizerSocieties();
+            renderSocietyFilter();
+            renderEventTable();
+            renderStudentEventSelect();
+            renderStats(studentCount);
+            return;
+        }
 
         renderOrganizerSocieties();
         renderSocietyFilter();
@@ -382,12 +474,23 @@ async function refreshViews() {
         renderStudentEventSelect();
         renderStats(studentCount);
     } catch (error) {
-        writeConsole("Data load failed: " + error.message);
-        showToast("Supabase table error. Run SQL setup file.");
+        applyLocalFallbackData();
+        renderOrganizerSocieties();
+        renderSocietyFilter();
+        renderEventTable();
+        renderStudentEventSelect();
+        renderStats(0);
+        writeConsole("Data load failed: " + error.message + " | Using local fallback.");
+        showToast("Supabase not ready. Showing local events.");
     }
 }
 
 async function sendStudentOtp() {
+    if (usingLocalFallback || !supabase) {
+        showToast("Supabase auth not ready yet.");
+        return;
+    }
+
     const email = studentEmail.value.trim().toLowerCase();
     if (!isAllowedStudentEmail(email)) {
         showToast("Use NUST school email: " + ALLOWED_DOMAIN_HINT);
