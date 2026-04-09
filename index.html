@@ -3,72 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NUST Events Portal | Phase 2</title>
+    <title>NUST Events & Society Portal</title>
+    <meta name="description" content="Dark-themed event portal mockup for OOP End Semester Project by Abdullah Rauf, BSDS-3A SEECS NUST.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <div class="app-wrapper">
-        <aside class="sidebar glass">
-            <div class="logo-area">
-                <div class="nust-logo-sim"></div>
-                <h2>NUST Portal</h2>
+    <header class="hero shell">
+        <div class="hero-copy reveal-up">
+            <p class="eyebrow">OOP End Semester Project</p>
+            <h1>NUST Events & Society Portal</h1>
+            <p class="subtitle">
+                Built by Abdullah Rauf (BSDS-3A, SEECS, NUST). Students can discover and join campus events,
+                while organizers manage attendees with a role-based workflow.
+            </p>
+            <div class="hero-meta">
+                <span>Terminal App Concept</span>
+                <span>Web Frontend Prototype</span>
+                <span>Vercel Ready</span>
             </div>
-            <nav>
-                <a href="#" class="nav-item active" id="nav-dashboard" onclick="showSection('dashboard')">Dashboard</a>
-                <a href="#" class="nav-item" id="nav-admin" onclick="showSection('admin')">Society Admin</a>
-            </nav>
-            <div class="user-card">
-                <p>Muhammad Abdullah</p>
-                <span>BSDS-3A</span>
+        </div>
+        <div class="hero-stats reveal-up delay-1">
+            <article>
+                <h2>11</h2>
+                <p>Java Files</p>
+            </article>
+            <article>
+                <h2>8</h2>
+                <p>Societies</p>
+            </article>
+            <article>
+                <h2>4</h2>
+                <p>Live Events</p>
+            </article>
+            <article>
+                <h2>3</h2>
+                <p>User Roles</p>
+            </article>
+        </div>
+    </header>
+
+    <main class="shell">
+        <section class="controls reveal-up delay-2" aria-label="Event controls">
+            <div class="field-wrap">
+                <label for="searchInput">Search events</label>
+                <input id="searchInput" type="search" placeholder="Search by title, society, venue or type">
             </div>
-        </aside>
+            <div class="field-wrap">
+                <label for="typeFilter">Type</label>
+                <select id="typeFilter">
+                    <option value="all">All Types</option>
+                    <option value="concert">Concert</option>
+                    <option value="competition">Competition</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="seminar">Seminar</option>
+                </select>
+            </div>
+            <div class="field-wrap">
+                <label for="statusFilter">Status</label>
+                <select id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="delayed">Delayed</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="expected">Expected</option>
+                </select>
+            </div>
+            <button id="resetFiltersBtn" type="button" class="ghost-btn">Reset</button>
+        </section>
 
-        <main class="content-area">
-            
-            <section id="dashboard" class="page-section active">
-                <header class="main-header">
-                    <h1>Explore Events</h1>
-                    <div class="search-bar glass">
-                        <input type="text" placeholder="Search events...">
-                    </div>
-                </header>
-                <div class="bento-grid" id="eventGrid">
-                    </div>
-            </section>
+        <section class="section-head reveal-up delay-3">
+            <h2>Featured Events</h2>
+            <p id="resultCounter">Showing 0 events</p>
+        </section>
 
-            <section id="admin" class="page-section">
-                <div class="admin-form-wrapper glass">
-                    <h2>Society Organizer Panel</h2>
-                    <form id="createEventForm" class="grid-form">
-                        <div class="form-group full">
-                            <label>Event Title</label>
-                            <input type="text" id="formTitle" placeholder="e.g. Speed Programming 2.0" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Event Type</label>
-                            <select id="formType">
-                                <option value="Workshop">Workshop</option>
-                                <option value="Concert">Concert</option>
-                                <option value="Competition">Competition</option>
-                                <option value="Seminar">Seminar</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Capacity</label>
-                            <input type="number" id="formCapacity" placeholder="Max Seats" required>
-                        </div>
-                        <div class="form-group full">
-                            <label>Venue</label>
-                            <input type="text" id="formVenue" placeholder="e.g. SEECS Auditorium" required>
-                        </div>
-                        <button type="button" class="btn-submit" onclick="handleCreateEvent()">Launch Event 🚀</button>
-                    </form>
-                </div>
-            </section>
-        </main>
-    </div>
+        <section id="eventGrid" class="event-grid" aria-live="polite"></section>
+
+        <section class="roles reveal-up delay-4">
+            <div class="role-tabs" role="tablist" aria-label="Portal roles">
+                <button class="role-tab active" role="tab" aria-selected="true" data-role="guest">Guest</button>
+                <button class="role-tab" role="tab" aria-selected="false" data-role="student">Student</button>
+                <button class="role-tab" role="tab" aria-selected="false" data-role="organizer">Organizer</button>
+            </div>
+            <article id="rolePanel" class="role-panel" aria-live="polite"></article>
+        </section>
+
+        <section class="societies reveal-up delay-5">
+            <h2>Pre-loaded Societies</h2>
+            <div id="societyList" class="society-list"></div>
+        </section>
+    </main>
+
+    <footer class="footer shell">
+        <p>Course: OOP End Semester Project | SEECS NUST</p>
+        <p>Designed for static deployment on Vercel</p>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script src="script.js"></script>
 </body>
