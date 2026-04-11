@@ -50,12 +50,13 @@ body {
 
 .eyebrow {
 	color: var(--muted);
-	margin: 0 0 8px;
-	font-size: 0.9rem;
+	margin: 0 16px 8px -10px; /* Reduced right margin to separate from h1, negative left to move left */
+	font-size: 0.7rem; /* Smaller size */
 	font-weight: 800;
 	text-transform: uppercase;
 	letter-spacing: 0.15em;
 	display: inline-block;
+	vertical-align: middle;
 }
 
 h1,
