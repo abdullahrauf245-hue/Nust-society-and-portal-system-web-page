@@ -25,6 +25,14 @@ const searchInput = document.getElementById("searchInput");
 const typeFilter = document.getElementById("typeFilter");
 const societyFilter = document.getElementById("societyFilter");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+const statsGrid = document.getElementById("statsGrid");
+const featuredEventsGrid = document.getElementById("featuredEventsGrid");
+const liveCounter = document.getElementById("liveCounter");
+const refreshFeaturedBtn = document.getElementById("refreshFeaturedBtn");
+const jumpStudentBtn = document.getElementById("jumpStudentBtn");
+const jumpOrganizerBtn = document.getElementById("jumpOrganizerBtn");
+const switchOrganizerViewBtn = document.getElementById("switchOrganizerViewBtn");
+const sideNavLinks = document.querySelectorAll(".side-nav-link");
 const consoleBox = document.getElementById("consoleBox");
 const toast = document.getElementById("toast");
 
@@ -206,6 +214,121 @@ function renderOrganizerSelect() {
 	organizerSocietySelect.innerHTML = societies.map((s) => '<option value="' + s.name + '">' + s.name + '</option>').join("");
 }
 
+function totalRegistrations() {
+	return events.reduce((sum, event) => sum + event.registeredCmsIds.length, 0);
+}
+
+function scrollToSection(sectionId) {
+	const section = document.getElementById(sectionId);
+	if (section) {
+		section.scrollIntoView({ behavior: "smooth", block: "start" });
+	}
+}
+
+function setActiveSideNav(target) {
+	sideNavLinks.forEach((link) => {
+		link.classList.toggle("active", link.dataset.target === target);
+	});
+}
+
+function renderDashboardStats() {
+	if (!statsGrid) return;
+
+	const societyCount = new Set(events.map((event) => event.society)).size;
+	const stats = [
+		{
+			label: "Live Events",
+			value: String(events.length).padStart(2, "0"),
+			note: "Active and upcoming listings",
+			tone: "tone-a"
+		},
+		{
+			label: "Societies",
+			value: String(societyCount).padStart(2, "0"),
+			note: "Hosts represented in the portal",
+			tone: "tone-b"
+		},
+		{
+			label: "Students",
+			value: String(students.length).padStart(2, "0"),
+			note: "Registered student accounts",
+			tone: "tone-c"
+		},
+		{
+			label: "Registrations",
+			value: String(totalRegistrations()).padStart(2, "0"),
+			note: "Seat bookings across events",
+			tone: "tone-d"
+		}
+	];
+
+	statsGrid.innerHTML = stats.map((stat) => {
+		return (
+			'<article class="stat-card ' + stat.tone + '">' +
+				'<p class="stat-label">' + stat.label + '</p>' +
+				'<div class="stat-value">' + stat.value + '</div>' +
+				'<p class="stat-note">' + stat.note + '</p>' +
+			'</article>'
+		);
+	}).join("");
+
+	if (liveCounter) {
+		liveCounter.textContent = events.length + (events.length === 1 ? " event live" : " events live");
+	}
+}
+
+function featuredScore(event) {
+	const statusScore = { scheduled: 3, expected: 2, delayed: 1 }[event.status] || 0;
+	const linkScore = event.registrationUrl ? 1 : 0;
+	return statusScore * 10 + linkScore;
+}
+
+function renderFeaturedEvents() {
+	if (!featuredEventsGrid) return;
+
+	const featured = [...events]
+		.sort((a, b) => {
+			const scoreDelta = featuredScore(b) - featuredScore(a);
+			if (scoreDelta !== 0) return scoreDelta;
+			const bOrder = Number(String(b.id).split("-")[1] || 0);
+			const aOrder = Number(String(a.id).split("-")[1] || 0);
+			return bOrder - aOrder;
+		})
+		.slice(0, 3);
+
+	if (!featured.length) {
+		featuredEventsGrid.innerHTML = '<p class="muted">No events available yet.</p>';
+		return;
+	}
+
+	featuredEventsGrid.innerHTML = featured.map((event, index) => {
+		const avg = REVIEWABLE_TYPES.has(event.type) ? averageRating(event).toFixed(2) : "N/A";
+		const largeClass = index === 0 ? "event-card-large" : "";
+		const linkMarkup = event.registrationUrl
+			? '<button type="button" class="open-link" data-link="' + event.registrationUrl + '">Open</button>'
+			: '<span class="muted">No registration link</span>';
+
+		return (
+			'<article class="event-card ' + largeClass + '">' +
+				'<div class="event-card-head">' +
+					'<span class="pill">' + event.type + '</span>' +
+					'<span class="pill status-' + event.status + '">' + event.status + '</span>' +
+				'</div>' +
+				'<h3>' + event.title + '</h3>' +
+				'<p class="muted">' + event.society + '</p>' +
+				'<div class="event-card-meta">' +
+					'<div><span>Date</span><strong>' + event.date + '</strong></div>' +
+					'<div><span>Venue</span><strong>' + event.venue + '</strong></div>' +
+					'<div><span>Seats</span><strong>' + availableSeats(event) + '</strong></div>' +
+					'<div><span>Avg Rating</span><strong>' + avg + '</strong></div>' +
+				'</div>' +
+				'<p class="event-card-copy">' + event.description + '</p>' +
+				'<div class="event-card-footer">' + linkMarkup + '</div>' +
+			'</article>'
+		);
+	}).join("");
+}
+
 function renderEventsTable() {
 	const rows = filteredEvents();
 	resultCount.textContent = "Showing " + rows.length + " events";
@@ -235,6 +358,8 @@ function renderEventsTable() {
 }
 
 function refreshAll() {
+	renderDashboardStats();
+	renderFeaturedEvents();
 	renderFilters();
 	renderEventSelect();
 	renderOrganizerSelect();
@@ -557,6 +682,45 @@ function bind() {
 		renderEventsTable();
 	});
 
+	if (refreshFeaturedBtn) {
+		refreshFeaturedBtn.addEventListener("click", () => {
+			scrollToSection("events");
+			setActiveSideNav("events");
+		});
+	}
+
+	if (jumpStudentBtn) {
+		jumpStudentBtn.addEventListener("click", () => {
+			switchTab("student");
+			setActiveSideNav("roles");
+			scrollToSection("roles");
+		});
+	}
+
+	if (jumpOrganizerBtn) {
+		jumpOrganizerBtn.addEventListener("click", () => {
+			switchTab("organizer");
+			setActiveSideNav("roles");
+			scrollToSection("roles");
+		});
+	}
+
+	if (switchOrganizerViewBtn) {
+		switchOrganizerViewBtn.addEventListener("click", () => {
+			switchTab("organizer");
+			setActiveSideNav("roles");
+			scrollToSection("roles");
+		});
+	}
+
+	sideNavLinks.forEach((link) => {
+		link.addEventListener("click", () => {
+			const target = link.dataset.target;
+			setActiveSideNav(target);
+			scrollToSection(target);
+		});
+	});
+
 	document.querySelectorAll(".tab").forEach((tab) => {
 		tab.addEventListener("click", () => switchTab(tab.dataset.tab));
 	});
@@ -566,6 +730,14 @@ function bind() {
 		if (!button) return;
 		window.open(button.dataset.link, "_blank", "noopener");
 	});
+
+	if (featuredEventsGrid) {
+		featuredEventsGrid.addEventListener("click", (event) => {
+			const button = event.target.closest(".open-link");
+			if (!button) return;
+			window.open(button.dataset.link, "_blank", "noopener");
+		});
+	}
 
 	studentRegisterForm.addEventListener("submit", (event) => {
 		event.preventDefault();
@@ -626,6 +798,7 @@ function init() {
 	bind();
 	updateTypeExtras();
 	switchTab("guest");
+	setActiveSideNav("overview");
 	updateStudentUI();
 	updateOrganizerUI();
 	refreshAll();
