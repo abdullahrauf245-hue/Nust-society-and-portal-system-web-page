@@ -1356,3 +1356,30 @@ a:hover {
 		bottom: 16px;
 	}
 }
+
+/* Final monochrome override: make every major surface pure black. */
+.sidebar,
+.topbar,
+.hero-panel,
+.card,
+.feature-card,
+.stat-card,
+.mini-card,
+.event-card,
+.block,
+.table-wrap,
+.console,
+.profile-card,
+.side-nav-link,
+.side-nav-link.active,
+.topbar-search input,
+input,
+select {
+	background-color: #000000 !important;
+	background-image: none !important;
+}
+
+.stat-card::before {
+	content: none !important;
+	display: none !important;
+}
