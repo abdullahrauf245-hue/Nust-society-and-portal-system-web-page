@@ -102,6 +102,6 @@ Every action prints a timestamped log line to the on-screen console panel.
 
 ## Course Info
 
-**Course:** CS-2001 Object Oriented Programming  
+**Course:** CS-202-Object Oriented Programming  
 **Project:** End Semester Project — NUST Events & Society Portal  
 **Campus:** SEECS, NUST H-12 Islamabad
