@@ -11,188 +11,270 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-	<header class="shell top">
-		<div class="header-main">
-			<p class="eyebrow">OOP End Semester Project</p>
-			<h1>NUST Events & Society Portal</h1>
-			<p class="made-by">Made by Muhammad Abdullah<br>BSDS-3A</p>
-		</div>
-		<p class="sub">Upcoming events first, then role-based flows for Guest, Student, and Organizer.</p>
-	</header>
+	<div class="app-shell">
+		<aside class="sidebar">
+			<div>
+				<div class="brand-lockup">
+					<span class="brand-mark">NUST Events</span>
+					<span class="brand-sub">Society Portal</span>
+				</div>
 
-	<main class="shell main-grid">
-		<section class="card">
-			<div class="card-head">
-				<h2>Upcoming Events</h2>
-				<p id="resultCount" class="muted">Showing 0 events</p>
+				<div class="profile-card">
+					<div class="avatar">MA</div>
+					<div>
+						<p class="profile-name">Muhammad Abdullah</p>
+						<p class="profile-meta">BSDS-3A</p>
+					</div>
+				</div>
+
+				<nav class="side-nav" aria-label="Dashboard sections">
+					<button class="side-nav-link active" data-target="overview" type="button">Overview</button>
+					<button class="side-nav-link" data-target="events" type="button">Upcoming Events</button>
+					<button class="side-nav-link" data-target="roles" type="button">Portal Roles</button>
+					<button class="side-nav-link" data-target="console" type="button">Console Output</button>
+				</nav>
 			</div>
 
-			<div class="filters">
-				<label>
-					Search
+			<button id="switchOrganizerViewBtn" class="sidebar-cta" type="button">Switch to Organizer</button>
+		</aside>
+
+		<div class="workspace">
+			<header class="topbar">
+				<p class="eyebrow">OOP End Semester Project</p>
+				<h1>NUST Events & Society Portal</h1>
+				<p class="made-by">Made by Muhammad Abdullah<br>BSDS-3A</p>
+				<p class="sub">Upcoming events first, then role-based flows for Guest, Student, and Organizer.</p>
+				<label class="topbar-search">
+					<span>Search events</span>
 					<input id="searchInput" type="search" placeholder="Title, society, type">
 				</label>
-				<label>
-					Type
-					<select id="typeFilter">
-						<option value="all">All</option>
-						<option value="workshop">Workshop</option>
-						<option value="concert">Concert</option>
-						<option value="competition">Competition</option>
-						<option value="seminar">Seminar</option>
-					</select>
-				</label>
-				<label>
-					Society
-					<select id="societyFilter">
-						<option value="all">All</option>
-					</select>
-				</label>
-				<button id="resetFiltersBtn" type="button">Reset</button>
-			</div>
+			</header>
 
-			<div class="table-wrap">
-				<table>
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>Title</th>
-							<th>Society</th>
-							<th>Type</th>
-							<th>Date</th>
-							<th>Venue</th>
-							<th>Seats</th>
-							<th>Avg Rating</th>
-							<th>Link</th>
-						</tr>
-					</thead>
-					<tbody id="eventsTbody"></tbody>
-				</table>
-			</div>
-		</section>
+			<main class="dashboard">
+				<section id="overview" class="hero-panel">
+					<div>
+						<p class="section-kicker">At a Glance</p>
+						<h2>Dashboard Overview</h2>
+						<p class="muted">A dark dashboard for guest browsing, student registration, and organizer workflows.</p>
+					</div>
+					<div class="hero-chip">NUST Campus</div>
+				</section>
 
-		<section class="card">
-			<h2>Portal Roles</h2>
-			<div class="tabs" role="tablist" aria-label="roles">
-				<button class="tab active" data-tab="guest" type="button">Guest</button>
-				<button class="tab" data-tab="student" type="button">Student</button>
-				<button class="tab" data-tab="organizer" type="button">Organizer</button>
-			</div>
+				<section id="statsGrid" class="stats-grid" aria-label="Overview metrics"></section>
 
-			<article id="panel-guest" class="panel active">
-				<h3>Guest</h3>
-				<ul>
-					<li>Browse all upcoming events</li>
-					<li>Filter by category and society</li>
-					<li>Search by title and event type</li>
-				</ul>
-			</article>
-
-			<article id="panel-student" class="panel">
-				<h3>Student</h3>
-				<div class="grid2">
-					<form id="studentRegisterForm" class="block">
-						<h4>Register Account</h4>
-						<input name="name" placeholder="Full Name" required>
-						<input name="cmsId" placeholder="CMS ID" required>
-						<input name="email" type="email" placeholder="Email" required>
-						<input name="password" type="password" placeholder="Password" required>
-						<input name="section" placeholder="Section (BSDS-3A)" required>
-						<button type="submit">Register</button>
-					</form>
-
-					<form id="studentLoginForm" class="block">
-						<h4>Login</h4>
-						<input name="cmsId" placeholder="CMS ID" required>
-						<input name="password" type="password" placeholder="Password" required>
-						<button type="submit">Login</button>
-						<p id="studentSession" class="muted">Not logged in</p>
-					</form>
-				</div>
-
-				<div id="studentActions" class="block hidden">
-					<h4>Student Dashboard</h4>
-					<div class="grid2">
-						<label>
-							Event
-							<select id="studentEventSelect"></select>
-						</label>
-						<div class="actions">
-							<button type="button" id="registerEventBtn">Register</button>
-							<button type="button" id="cancelEventBtn">Cancel</button>
-							<button type="button" id="showReviewsBtn">Reviews</button>
+				<section class="feature-layout">
+					<article class="card feature-card">
+						<div class="section-head">
+							<div>
+								<h2>Featured Events</h2>
+								<p class="muted">Highlighted cards pulled from the active event list.</p>
+							</div>
+							<button id="refreshFeaturedBtn" type="button">View Full List</button>
 						</div>
+						<div id="featuredEventsGrid" class="featured-grid"></div>
+					</article>
+
+					<aside class="stack-panel">
+						<article class="mini-card">
+							<p class="mini-label">Current Mode</p>
+							<h3>Guest Access</h3>
+							<p class="muted">Browse the latest events, then switch to student or organizer flows.</p>
+						</article>
+						<article class="mini-card">
+							<p class="mini-label">Quick Actions</p>
+							<div class="mini-actions">
+								<button id="jumpStudentBtn" type="button">Student Hub</button>
+								<button id="jumpOrganizerBtn" type="button">Organizer Hub</button>
+							</div>
+						</article>
+						<article class="mini-card accent">
+							<p class="mini-label">Live Counter</p>
+							<h3 id="liveCounter">4 events live</h3>
+							<p class="muted">Updates as organizers add new events.</p>
+						</article>
+					</aside>
+				</section>
+
+				<section id="events" class="card">
+					<div class="card-head">
+						<h2>Upcoming Events</h2>
+						<p id="resultCount" class="muted">Showing 0 events</p>
 					</div>
 
-					<div class="grid2">
-						<input id="reviewText" placeholder="Feedback">
-						<select id="reviewRating">
-							<option value="1">1</option>
-							<option value="2">2</option>
-							<option value="3">3</option>
-							<option value="4">4</option>
-							<option value="5" selected>5</option>
-						</select>
-					</div>
-
-					<div class="actions">
-						<button type="button" id="submitReviewBtn">Submit Review</button>
-						<button type="button" id="profileBtn">My Profile</button>
-						<button type="button" id="upcomingBtn">Upcoming</button>
-						<button type="button" id="studentLogoutBtn">Logout</button>
-					</div>
-				</div>
-			</article>
-
-			<article id="panel-organizer" class="panel">
-				<h3>Organizer</h3>
-				<form id="organizerLoginForm" class="block">
-					<h4>Organizer Login</h4>
-					<label>
-						Society
-						<select id="organizerSocietySelect"></select>
-					</label>
-					<input name="password" type="password" placeholder="Society Password" required>
-					<button type="submit">Login</button>
-					<p id="organizerSession" class="muted">Not logged in</p>
-				</form>
-
-				<div id="organizerActions" class="block hidden">
-					<h4>Organizer Dashboard</h4>
-					<div class="actions">
-						<button type="button" id="myEventsBtn">View My Events</button>
-						<button type="button" id="attendeesBtn">View Attendees</button>
-						<button type="button" id="organizerLogoutBtn">Logout</button>
-					</div>
-
-					<form id="addEventForm" class="block add-form">
-						<h5>Add New Event</h5>
-						<div class="grid2">
-							<select id="newEventType" required>
+					<div class="filters">
+						<label>
+							Type
+							<select id="typeFilter">
+								<option value="all">All</option>
 								<option value="workshop">Workshop</option>
 								<option value="concert">Concert</option>
 								<option value="competition">Competition</option>
 								<option value="seminar">Seminar</option>
 							</select>
-							<input id="newEventTitle" placeholder="Title" required>
-							<input id="newEventDate" placeholder="Date (25-Apr-2026)" required>
-							<input id="newEventVenue" placeholder="Venue" required>
-							<input id="newEventCapacity" type="number" min="1" placeholder="Capacity" required>
-							<input id="newEventDescription" placeholder="Description" required>
-							<input id="newEventExtra1" placeholder="Extra field 1" required>
-							<input id="newEventExtra2" placeholder="Extra field 2" required>
-						</div>
-						<button type="submit">Add Event</button>
-					</form>
-				</div>
-			</article>
-		</section>
+						</label>
+						<label>
+							Society
+							<select id="societyFilter">
+								<option value="all">All</option>
+							</select>
+						</label>
+						<button id="resetFiltersBtn" type="button">Reset</button>
+					</div>
 
-		<section class="card">
-			<h2>Console Output</h2>
-			<pre id="consoleBox" class="console">Ready.</pre>
-		</section>
-	</main>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Title</th>
+									<th>Society</th>
+									<th>Type</th>
+									<th>Date</th>
+									<th>Venue</th>
+									<th>Seats</th>
+									<th>Avg Rating</th>
+									<th>Link</th>
+								</tr>
+							</thead>
+							<tbody id="eventsTbody"></tbody>
+						</table>
+					</div>
+				</section>
+
+				<section id="roles" class="card">
+					<div class="section-head">
+						<div>
+							<h2>Portal Roles</h2>
+							<p class="muted">Guest, Student, and Organizer access.</p>
+						</div>
+					</div>
+					<div class="tabs" role="tablist" aria-label="roles">
+						<button class="tab active" data-tab="guest" type="button">Guest</button>
+						<button class="tab" data-tab="student" type="button">Student</button>
+						<button class="tab" data-tab="organizer" type="button">Organizer</button>
+					</div>
+
+					<article id="panel-guest" class="panel active">
+						<h3>Guest</h3>
+						<ul>
+							<li>Browse all upcoming events</li>
+							<li>Filter by category and society</li>
+							<li>Search by title and event type</li>
+						</ul>
+					</article>
+
+					<article id="panel-student" class="panel">
+						<h3>Student</h3>
+						<div class="grid2">
+							<form id="studentRegisterForm" class="block">
+								<h4>Register Account</h4>
+								<input name="name" placeholder="Full Name" required>
+								<input name="cmsId" placeholder="CMS ID" required>
+								<input name="email" type="email" placeholder="Email" required>
+								<input name="password" type="password" placeholder="Password" required>
+								<input name="section" placeholder="Section (BSDS-3A)" required>
+								<button type="submit">Register</button>
+							</form>
+
+							<form id="studentLoginForm" class="block">
+								<h4>Login</h4>
+								<input name="cmsId" placeholder="CMS ID" required>
+								<input name="password" type="password" placeholder="Password" required>
+								<button type="submit">Login</button>
+								<p id="studentSession" class="muted">Not logged in</p>
+							</form>
+						</div>
+
+						<div id="studentActions" class="block hidden">
+							<h4>Student Dashboard</h4>
+							<div class="grid2">
+								<label>
+									Event
+									<select id="studentEventSelect"></select>
+								</label>
+								<div class="actions">
+									<button type="button" id="registerEventBtn">Register</button>
+									<button type="button" id="cancelEventBtn">Cancel</button>
+									<button type="button" id="showReviewsBtn">Reviews</button>
+								</div>
+							</div>
+
+							<div class="grid2">
+								<input id="reviewText" placeholder="Feedback">
+								<select id="reviewRating">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5" selected>5</option>
+								</select>
+							</div>
+
+							<div class="actions">
+								<button type="button" id="submitReviewBtn">Submit Review</button>
+								<button type="button" id="profileBtn">My Profile</button>
+								<button type="button" id="upcomingBtn">Upcoming</button>
+								<button type="button" id="studentLogoutBtn">Logout</button>
+							</div>
+						</div>
+					</article>
+
+					<article id="panel-organizer" class="panel">
+						<h3>Organizer</h3>
+						<form id="organizerLoginForm" class="block">
+							<h4>Organizer Login</h4>
+							<label>
+								Society
+								<select id="organizerSocietySelect"></select>
+							</label>
+							<input name="password" type="password" placeholder="Society Password" required>
+							<button type="submit">Login</button>
+							<p id="organizerSession" class="muted">Not logged in</p>
+						</form>
+
+						<div id="organizerActions" class="block hidden">
+							<h4>Organizer Dashboard</h4>
+							<div class="actions">
+								<button type="button" id="myEventsBtn">View My Events</button>
+								<button type="button" id="attendeesBtn">View Attendees</button>
+								<button type="button" id="organizerLogoutBtn">Logout</button>
+							</div>
+
+							<form id="addEventForm" class="block add-form">
+								<h5>Add New Event</h5>
+								<div class="grid2">
+									<select id="newEventType" required>
+										<option value="workshop">Workshop</option>
+										<option value="concert">Concert</option>
+										<option value="competition">Competition</option>
+										<option value="seminar">Seminar</option>
+									</select>
+									<input id="newEventTitle" placeholder="Title" required>
+									<input id="newEventDate" placeholder="Date (25-Apr-2026)" required>
+									<input id="newEventVenue" placeholder="Venue" required>
+									<input id="newEventCapacity" type="number" min="1" placeholder="Capacity" required>
+									<input id="newEventDescription" placeholder="Description" required>
+									<input id="newEventExtra1" placeholder="Extra field 1" required>
+									<input id="newEventExtra2" placeholder="Extra field 2" required>
+								</div>
+								<button type="submit">Add Event</button>
+							</form>
+						</div>
+					</article>
+				</section>
+
+				<section id="console" class="card">
+					<div class="section-head">
+						<div>
+							<h2>Console Output</h2>
+							<p class="muted">Activity log and system messages.</p>
+						</div>
+					</div>
+					<pre id="consoleBox" class="console">Ready.</pre>
+				</section>
+			</main>
+		</div>
+	</div>
 
 	<div id="toast" class="toast" role="status" aria-live="polite"></div>
 	<script src="script.js"></script>
