@@ -111,7 +111,7 @@ function seedRealEvents() {
 			type: "concert",
 			society: "NUST Music Society",
 			date: "DELAYED - Originally 21-22 Apr 2026",
-			venue: "NUST Amphitheatre",
+			venue: "NBS GROUND, NUST H-12",
 			capacity: 500,
 			description: "NUST annual music festival. Currently delayed.",
 			status: "delayed",
