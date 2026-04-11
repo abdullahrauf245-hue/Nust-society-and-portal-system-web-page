@@ -665,7 +665,12 @@ function addOrganizerEvent() {
 	loggedInOrganizer.eventIds.push(event.id);
 	addEventForm.reset();
 	updateTypeExtras();
+	searchInput.value = "";
+	typeFilter.value = "all";
+	societyFilter.value = "all";
 	refreshAll();
+	setActiveSideNav("events");
+	scrollToSection("events");
 	toastMsg("Event added");
 	logLine('Event "' + event.title + '" added successfully!');
 }
