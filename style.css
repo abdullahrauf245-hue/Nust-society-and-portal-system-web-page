@@ -46,17 +46,41 @@ body {
 
 .top {
 	padding: 40px 0 24px;
+	text-align: center;
+}
+
+.header-main {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.header-main h1 {
+	margin-bottom: 0;
 }
 
 .eyebrow {
+	position: absolute;
+	left: 0;
 	color: var(--muted);
-	margin: 0 16px 8px -10px; /* Reduced right margin to separate from h1, negative left to move left */
-	font-size: 0.7rem; /* Smaller size */
+	margin: 0;
+	font-size: 0.7rem;
 	font-weight: 800;
 	text-transform: uppercase;
 	letter-spacing: 0.15em;
-	display: inline-block;
-	vertical-align: middle;
+}
+
+.made-by {
+	position: absolute;
+	right: 0;
+	color: var(--muted);
+	margin: 0;
+	font-size: 0.7rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
 }
 
 h1,
