@@ -50,6 +50,7 @@ const organizerSession = document.getElementById("organizerSession");
 const organizerActions = document.getElementById("organizerActions");
 const addEventForm = document.getElementById("addEventForm");
 const newEventType = document.getElementById("newEventType");
+const newEventRegistrationUrl = document.getElementById("newEventRegistrationUrl");
 const newEventExtra1 = document.getElementById("newEventExtra1");
 const newEventExtra2 = document.getElementById("newEventExtra2");
 
@@ -75,6 +76,18 @@ function averageRating(event) {
 	if (!event.reviews.length) return 0;
 	const total = event.reviews.reduce((sum, r) => sum + r.rating, 0);
 	return total / event.reviews.length;
+}
+
+function normalizeRegistrationUrl(rawUrl) {
+	const raw = String(rawUrl || "").trim();
+	if (!raw) return "";
+
+	const withProtocol = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
+	try {
+		return new URL(withProtocol).toString();
+	} catch {
+		return null;
+	}
 }
 
 function logLine(message) {
@@ -169,6 +182,7 @@ function seedRealEvents() {
 		const evt = {
 			id,
 			...e,
+			createdBy: e.society,
 			registeredCmsIds: [],
 			reviews: []
 		};
@@ -334,13 +348,15 @@ function renderEventsTable() {
 	resultCount.textContent = "Showing " + rows.length + " events";
 
 	if (!rows.length) {
-		eventsTbody.innerHTML = '<tr><td colspan="9">No events found.</td></tr>';
+		eventsTbody.innerHTML = '<tr><td colspan="10">No events found.</td></tr>';
 		return;
 	}
 
 	eventsTbody.innerHTML = rows.map((e, i) => {
 		const avg = REVIEWABLE_TYPES.has(e.type) ? averageRating(e).toFixed(2) : "N/A";
 		const link = e.registrationUrl ? '<button type="button" class="open-link" data-link="' + e.registrationUrl + '">Open</button>' : "-";
+		const canDelete = Boolean(loggedInOrganizer) && e.createdBy === loggedInOrganizer.name;
+		const manage = canDelete ? '<button type="button" class="delete-event" data-event-id="' + e.id + '">Delete</button>' : "";
 		return (
 			"<tr>" +
 				"<td>" + (i + 1) + "</td>" +
@@ -352,6 +368,7 @@ function renderEventsTable() {
 				"<td>" + availableSeats(e) + "</td>" +
 				"<td>" + avg + "</td>" +
 				"<td>" + link + "</td>" +
+				"<td>" + manage + "</td>" +
 			"</tr>"
 		);
 	}).join("");
@@ -612,6 +629,52 @@ function showAttendees() {
 	logLine(lines.join("\n"));
 }
 
+function deleteOrganizerEvent(eventId) {
+	if (!loggedInOrganizer) {
+		toastMsg("Login as organizer first");
+		return;
+	}
+
+	const event = byEvent(eventId);
+	if (!event) {
+		toastMsg("Event not found");
+		return;
+	}
+
+	if (event.createdBy !== loggedInOrganizer.name) {
+		toastMsg("You can only delete your own events");
+		return;
+	}
+
+	if (!window.confirm('Delete event "' + event.title + '"?')) {
+		return;
+	}
+
+	const eventIndex = events.findIndex((e) => e.id === eventId);
+	if (eventIndex === -1) {
+		toastMsg("Event not found");
+		return;
+	}
+
+	events.splice(eventIndex, 1);
+	students.forEach((student) => {
+		student.registeredEventIds = student.registeredEventIds.filter((id) => id !== eventId);
+	});
+
+	const hostSociety = bySociety(event.society);
+	if (hostSociety) {
+		hostSociety.eventIds = hostSociety.eventIds.filter((id) => id !== eventId);
+	}
+
+	if (loggedInOrganizer) {
+		loggedInOrganizer.eventIds = loggedInOrganizer.eventIds.filter((id) => id !== eventId);
+	}
+
+	refreshAll();
+	toastMsg("Event deleted");
+	logLine('Event "' + event.title + '" deleted by ' + loggedInOrganizer.name + '.');
+}
+
 function addOrganizerEvent() {
 	if (!loggedInOrganizer) {
 		toastMsg("Login as organizer first");
@@ -624,8 +687,15 @@ function addOrganizerEvent() {
 	const venue = document.getElementById("newEventVenue").value.trim();
 	const capRaw = Number(document.getElementById("newEventCapacity").value.trim());
 	const description = document.getElementById("newEventDescription").value.trim();
+	const registrationUrl = normalizeRegistrationUrl(newEventRegistrationUrl.value);
 	const extra1 = newEventExtra1.value.trim();
 	const extra2 = newEventExtra2.value.trim();
+
+	if (registrationUrl === null) {
+		toastMsg("Invalid registration URL");
+		logLine("Please provide a valid URL or leave it empty.");
+		return;
+	}
 
 	const details = {};
 	if (type === "workshop") {
@@ -654,8 +724,9 @@ function addOrganizerEvent() {
 		venue,
 		capacity: Number.isFinite(capRaw) && capRaw > 0 ? capRaw : 50,
 		description,
+		createdBy: loggedInOrganizer.name,
 		status: "scheduled",
-		registrationUrl: "",
+		registrationUrl,
 		details,
 		registeredCmsIds: [],
 		reviews: []
@@ -731,9 +802,15 @@ function bind() {
 	});
 
 	eventsTbody.addEventListener("click", (event) => {
-		const button = event.target.closest(".open-link");
-		if (!button) return;
-		window.open(button.dataset.link, "_blank", "noopener");
+		const deleteButton = event.target.closest(".delete-event");
+		if (deleteButton) {
+			deleteOrganizerEvent(deleteButton.dataset.eventId);
+			return;
+		}
+
+		const openButton = event.target.closest(".open-link");
+		if (!openButton) return;
+		window.open(openButton.dataset.link, "_blank", "noopener");
 	});
 
 	if (featuredEventsGrid) {
