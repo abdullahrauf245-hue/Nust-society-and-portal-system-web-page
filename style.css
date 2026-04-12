@@ -875,6 +875,11 @@ h5 {
 	box-shadow: var(--glass-shadow);
 }
 
+#roles,
+#console {
+	margin-left: -12px;
+}
+
 .section-head,
 .card-head {
 	display: flex;
@@ -1259,6 +1264,11 @@ a:hover {
 @media (max-width: 960px) {
 	.topbar {
 		text-align: left;
+	}
+
+	#roles,
+	#console {
+		margin-left: 0;
 	}
 
 	.topbar .eyebrow,

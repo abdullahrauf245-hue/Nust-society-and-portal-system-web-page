@@ -754,53 +754,37 @@ function addOrganizerEvent() {
 
 // ─── Scroll Spy ───────────────────────────────────────────────────────────────
 function initScrollSpy() {
-	// Map each section ID to its matching sidebar nav target
 	const sectionTargetMap = {
-		"overview": "overview",
-		"statsGrid": "overview",   // stats are part of overview visually
-		"events": "events",
-		"roles": "roles",
-		"console": "roles"         // console is merged under Portal Roles & Console
+		overview: "overview",
+		statsGrid: "overview",
+		events: "events",
+		roles: "roles",
+		console: "roles"
 	};
 
 	const sectionIds = Object.keys(sectionTargetMap);
-	const sections = sectionIds
-		.map((id) => document.getElementById(id))
-		.filter(Boolean);
 
-	// Track which sections are currently visible
-	const visibleSections = new Set();
+	function updateActiveNavFromScroll() {
+		if (!scrollSpyEnabled) return;
 
-	const observer = new IntersectionObserver(
-		(entries) => {
-			if (!scrollSpyEnabled) return;
+		const activationLine = 180;
+		let activeId = "overview";
 
-			entries.forEach((entry) => {
-				if (entry.isIntersecting) {
-					visibleSections.add(entry.target.id);
-				} else {
-					visibleSections.delete(entry.target.id);
-				}
-			});
+		for (const id of sectionIds) {
+			const section = document.getElementById(id);
+			if (!section) continue;
 
-			// Pick the topmost visible section in document order
-			for (const id of sectionIds) {
-				if (visibleSections.has(id)) {
-					const navTarget = sectionTargetMap[id];
-					setActiveSideNav(navTarget);
-					break;
-				}
+			if (section.getBoundingClientRect().top <= activationLine) {
+				activeId = id;
 			}
-		},
-		{
-			root: null,
-			// Section is "active" when it crosses into the top 60% of the viewport
-			rootMargin: "0px 0px -40% 0px",
-			threshold: 0
 		}
-	);
 
-	sections.forEach((section) => observer.observe(section));
+		setActiveSideNav(sectionTargetMap[activeId]);
+	}
+
+	window.addEventListener("scroll", updateActiveNavFromScroll, { passive: true });
+	window.addEventListener("resize", updateActiveNavFromScroll);
+	updateActiveNavFromScroll();
 }
 
 // ─── Event Bindings ───────────────────────────────────────────────────────────
