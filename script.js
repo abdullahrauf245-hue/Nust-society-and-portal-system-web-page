@@ -760,7 +760,7 @@ function initScrollSpy() {
 		"statsGrid": "overview",   // stats are part of overview visually
 		"events": "events",
 		"roles": "roles",
-		"console": "console"
+		"console": "roles"         // console is merged under Portal Roles & Console
 	};
 
 	const sectionIds = Object.keys(sectionTargetMap);
