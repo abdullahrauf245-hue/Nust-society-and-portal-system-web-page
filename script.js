@@ -18,6 +18,7 @@ let loggedInStudent = null;
 let loggedInOrganizer = null;
 let eventCounter = 1;
 let toastTimer = null;
+let scrollSpyEnabled = true; // flag to pause spy when user clicks a nav link
 
 const resultCount = document.getElementById("resultCount");
 const eventsTbody = document.getElementById("eventsTbody");
@@ -235,7 +236,12 @@ function totalRegistrations() {
 function scrollToSection(sectionId) {
 	const section = document.getElementById(sectionId);
 	if (section) {
+		// Pause scroll spy briefly so clicking doesn't flicker the nav
+		scrollSpyEnabled = false;
 		section.scrollIntoView({ behavior: "smooth", block: "start" });
+		setTimeout(() => {
+			scrollSpyEnabled = true;
+		}, 800);
 	}
 }
 
@@ -746,6 +752,58 @@ function addOrganizerEvent() {
 	logLine('Event "' + event.title + '" added successfully!');
 }
 
+// ─── Scroll Spy ───────────────────────────────────────────────────────────────
+function initScrollSpy() {
+	// Map each section ID to its matching sidebar nav target
+	const sectionTargetMap = {
+		"overview": "overview",
+		"statsGrid": "overview",   // stats are part of overview visually
+		"events": "events",
+		"roles": "roles",
+		"console": "console"
+	};
+
+	const sectionIds = Object.keys(sectionTargetMap);
+	const sections = sectionIds
+		.map((id) => document.getElementById(id))
+		.filter(Boolean);
+
+	// Track which sections are currently visible
+	const visibleSections = new Set();
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (!scrollSpyEnabled) return;
+
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					visibleSections.add(entry.target.id);
+				} else {
+					visibleSections.delete(entry.target.id);
+				}
+			});
+
+			// Pick the topmost visible section in document order
+			for (const id of sectionIds) {
+				if (visibleSections.has(id)) {
+					const navTarget = sectionTargetMap[id];
+					setActiveSideNav(navTarget);
+					break;
+				}
+			}
+		},
+		{
+			root: null,
+			// Section is "active" when it crosses into the top 60% of the viewport
+			rootMargin: "0px 0px -40% 0px",
+			threshold: 0
+		}
+	);
+
+	sections.forEach((section) => observer.observe(section));
+}
+
+// ─── Event Bindings ───────────────────────────────────────────────────────────
 function bind() {
 	searchInput.addEventListener("input", renderEventsTable);
 	typeFilter.addEventListener("change", renderEventsTable);
@@ -760,8 +818,8 @@ function bind() {
 
 	if (refreshFeaturedBtn) {
 		refreshFeaturedBtn.addEventListener("click", () => {
-			scrollToSection("events");
 			setActiveSideNav("events");
+			scrollToSection("events");
 		});
 	}
 
@@ -875,6 +933,7 @@ function bind() {
 	});
 }
 
+// ─── Init ─────────────────────────────────────────────────────────────────────
 function init() {
 	seedRealEvents();
 	bind();
@@ -884,6 +943,7 @@ function init() {
 	updateStudentUI();
 	updateOrganizerUI();
 	refreshAll();
+	initScrollSpy();
 	logLine("Portal initialized with 4 real upcoming events.");
 }
 
