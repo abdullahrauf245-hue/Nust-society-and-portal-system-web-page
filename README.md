@@ -1,3 +1,5 @@
+               My first ever Web Page Deployment
+
 # NUST Events & Society Portal — Web Frontend
 
 A browser-based companion to the Java OOP terminal project. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no dependencies.
