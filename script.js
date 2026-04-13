@@ -931,4 +931,4 @@ function init() {
 	logLine("Portal initialized with 4 real upcoming events.");
 }
 
-init();
+init();	
