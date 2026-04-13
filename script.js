@@ -3,12 +3,13 @@ const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
 const societies = [
 	{ name: "NUST Music Society", category: "Cultural", password: "nms123", eventIds: [] },
 	{ name: "RIC", category: "Fundraiser", password: "ric123", eventIds: [] },
-	{ name: "NEC", category: "Technical", password: "nec123", eventIds: [] },
+	{ name: "NUST Entrepreneurship Club (NEC)", category: "Technical", password: "nec123", eventIds: [] },
 	{ name: "ACM", category: "Technical", password: "acm123", eventIds: [] },
 	{ name: "Vyro.ai", category: "Technical", password: "vyro123", eventIds: [] },
 	{ name: "IEEE", category: "Technical", password: "ieee123", eventIds: [] },
 	{ name: "SOULS", category: "Cultural", password: "souls123", eventIds: [] },
 	{ name: "AND", category: "Technical", password: "and123", eventIds: [] }
+	
 ];
 
 const events = [];
@@ -155,7 +156,7 @@ function seedRealEvents() {
 		{
 			title: "AIcon 2026",
 			type: "competition",
-			society: "NEC",
+								society: "NUST Entrepreneurship Club (NEC)",
 			date: "Expected: End of April 2026",
 			venue: "SEECS, NUST",
 			capacity: 150,
