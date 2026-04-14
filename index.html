@@ -8,13 +8,13 @@
 	<link rel="icon" type="image/svg+xml" href="favicon.svg">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 	<div class="app-shell">
 		<aside class="sidebar">
-			<div>
+			<div class="sidebar-inner">
 				<div class="brand-lockup">
 					<span class="brand-mark">NUST Events</span>
 					<span class="brand-sub">Society Portal</span>
@@ -29,25 +29,53 @@
 				</div>
 
 				<nav class="side-nav" aria-label="Dashboard sections">
-					<button class="side-nav-link active" data-target="overview" type="button">Overview</button>
-					<button class="side-nav-link" data-target="events" type="button">Upcoming Events</button>
-					<button class="side-nav-link" data-target="roles" type="button">Portal Roles & Console Output	</button>
-					
+					<button class="side-nav-link active" data-target="overview" type="button">
+						<span class="nav-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="4"/><rect x="14" y="10" width="7" height="11"/><rect x="3" y="13" width="7" height="8"/></svg>
+						</span>
+						<span>Overview</span>
+					</button>
+					<button class="side-nav-link" data-target="events" type="button">
+						<span class="nav-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="11" x2="21" y2="11"/></svg>
+						</span>
+						<span>Upcoming Events</span>
+					</button>
+					<button class="side-nav-link" data-target="roles" type="button">
+						<span class="nav-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="3"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+						</span>
+						<span>Portal Roles</span>
+					</button>
 				</nav>
 			</div>
 
-			<button id="switchOrganizerViewBtn" class="sidebar-cta" type="button">Switch to Organizer</button>
+			<div class="mode-control">
+				<p class="mini-label">Portal Mode</p>
+				<button id="switchOrganizerViewBtn" class="sidebar-cta" type="button" aria-pressed="false">
+					<span class="toggle-knob" aria-hidden="true"></span>
+					<span class="toggle-text">Guest Mode</span>
+				</button>
+			</div>
 		</aside>
 
 		<div class="workspace">
 			<header class="topbar">
-				<p class="eyebrow">OOP End Semester Project</p>
-				<h1>NUST Events & Society Portal</h1>
-				<p class="made-by">Made by Muhammad Abdullah<br>BSDS-3A</p>
-				<p class="sub">Upcoming events first, then role-based flows for Guest, Student, and Organizer.</p>
-				<label class="topbar-search">
+				<div class="topbar-copy">
+					<p class="eyebrow">OOP End Semester Project</p>
+					<h1>NUST Events &amp; Society Portal</h1>
+					<p class="made-by">Made by Muhammad Abdullah<br>BSDS-3A</p>
+					<p class="sub">Upcoming events first, then role-based flows for Guest, Student, and Organizer.</p>
+				</div>
+				<label class="topbar-search" for="searchInput">
 					<span>Search events</span>
-					<input id="searchInput" type="search" placeholder="Title, society, type">
+					<div class="search-shell">
+						<span class="search-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+						</span>
+						<input id="searchInput" type="search" placeholder="Title, society, type">
+						<span id="searchShortcutKey" class="search-shortcut">CTRL + K</span>
+					</div>
 				</label>
 			</header>
 
@@ -56,9 +84,15 @@
 					<div>
 						<p class="section-kicker">At a Glance</p>
 						<h2>Dashboard Overview</h2>
-						<p class="muted">A dark dashboard for guest browsing, student registration, and organizer workflows.</p>
+						<p class="muted">A premium glass dashboard for guest browsing, student registration, and organizer workflows.</p>
 					</div>
-					<div class="hero-chip">NUST H12 Campus</div>
+					<div class="hero-chip-wrap">
+						<div class="hero-chip">NUST H12 Campus</div>
+						<div class="hero-live">
+							<span class="hero-live-dot"></span>
+							Live Feed
+						</div>
+					</div>
 				</section>
 
 				<section id="statsGrid" class="stats-grid" aria-label="Overview metrics"></section>
@@ -257,7 +291,7 @@
 									<input id="newEventCapacity" type="number" min="1" placeholder="Capacity" required>
 									<input id="newEventDescription" placeholder="Description" required>
 									<input id="newEventRegistrationUrl" type="url" placeholder="Registration URL (optional)">
-							<input id="newEventExtra1" placeholder="Extra field 1" required>
+									<input id="newEventExtra1" placeholder="Extra field 1" required>
 									<input id="newEventExtra2" placeholder="Extra field 2" required>
 								</div>
 								<button type="submit">Add Event</button>

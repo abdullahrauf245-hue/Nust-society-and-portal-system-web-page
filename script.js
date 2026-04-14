@@ -156,7 +156,7 @@ function seedRealEvents() {
 		{
 			title: "AIcon 2026",
 			type: "competition",
-								society: "NUST Entrepreneurship Club (NEC)",
+			society: "NUST Entrepreneurship Club (NEC)",
 			date: "Expected: End of April 2026",
 			venue: "SEECS, NUST",
 			capacity: 150,
@@ -255,43 +255,61 @@ function setActiveSideNav(target) {
 function renderDashboardStats() {
 	if (!statsGrid) return;
 
+	const liveEvents = events.length;
 	const societyCount = new Set(events.map((event) => event.society)).size;
-	const stats = [
-		{
-			label: "Live Events",
-			value: String(events.length).padStart(2, "0"),
-			note: "Active and upcoming listings",
-			tone: "tone-a"
-		},
-		{
-			label: "Societies",
-			value: String(societyCount).padStart(2, "0"),
-			note: "Hosts represented in the portal",
-			tone: "tone-b"
-		},
-		{
-			label: "Students",
-			value: String(students.length).padStart(2, "0"),
-			note: "Registered student accounts",
-			tone: "tone-c"
-		},
-		{
-			label: "Registrations",
-			value: String(totalRegistrations()).padStart(2, "0"),
-			note: "Seat bookings across events",
-			tone: "tone-d"
-		}
-	];
+	const studentCount = students.length;
+	const registrations = totalRegistrations();
+	const totalCapacity = events.reduce((sum, event) => sum + Number(event.capacity || 0), 0);
+	const registrationFill = totalCapacity > 0 ? Math.min(100, Math.round((registrations / totalCapacity) * 100)) : 0;
 
-	statsGrid.innerHTML = stats.map((stat) => {
-		return (
-			'<article class="stat-card ' + stat.tone + '">' +
-				'<p class="stat-label">' + stat.label + '</p>' +
-				'<div class="stat-value">' + stat.value + '</div>' +
-				'<p class="stat-note">' + stat.note + '</p>' +
-			'</article>'
-		);
+	const societyEventCount = {};
+	events.forEach((event) => {
+		societyEventCount[event.society] = (societyEventCount[event.society] || 0) + 1;
+	});
+
+	const sparkValues = Object.values(societyEventCount).sort((a, b) => b - a).slice(0, 7);
+	const normalizedSparkValues = sparkValues.length ? sparkValues : [0, 0, 0, 0, 0, 0, 0];
+	const maxSparkValue = Math.max(...normalizedSparkValues, 1);
+	const sparklineMarkup = normalizedSparkValues.map((value) => {
+		const height = value === 0 ? 18 : Math.max(24, Math.round((value / maxSparkValue) * 100));
+		return '<span class="sparkline-bar" style="height:' + height + '%"></span>';
 	}).join("");
+
+	statsGrid.innerHTML =
+		'<article class="mini-widget tone-live">' +
+			'<div class="widget-head">' +
+				'<p class="widget-label">Live Events</p>' +
+				'<span class="live-pill"><span class="live-dot"></span>Live</span>' +
+			'</div>' +
+			'<div class="widget-value">' + String(liveEvents).padStart(2, "0") + '</div>' +
+			'<p class="widget-note">Active and upcoming listings</p>' +
+		'</article>' +
+		'<article class="mini-widget">' +
+			'<div class="widget-head">' +
+				'<p class="widget-label">Registrations</p>' +
+				'<span class="widget-note">' + registrationFill + '%</span>' +
+			'</div>' +
+			'<div class="widget-value">' + String(registrations).padStart(2, "0") + '</div>' +
+			'<div class="widget-progress"><div class="widget-progress-fill" style="width:' + registrationFill + '%"></div></div>' +
+			'<p class="widget-note">' + registrations + ' out of ' + totalCapacity + ' available seats</p>' +
+		'</article>' +
+		'<article class="mini-widget">' +
+			'<div class="widget-head">' +
+				'<p class="widget-label">Active Societies</p>' +
+				'<span class="widget-note">Trend</span>' +
+			'</div>' +
+			'<div class="widget-value">' + String(societyCount).padStart(2, "0") + '</div>' +
+			'<div class="sparkline">' + sparklineMarkup + '</div>' +
+			'<p class="widget-note">Based on event volume by society</p>' +
+		'</article>' +
+		'<article class="mini-widget">' +
+			'<div class="widget-head">' +
+				'<p class="widget-label">Student Accounts</p>' +
+				'<span class="widget-note">Directory</span>' +
+			'</div>' +
+			'<div class="widget-value">' + String(studentCount).padStart(2, "0") + '</div>' +
+			'<p class="widget-note">Registered users who can enroll and review</p>' +
+		'</article>';
 
 	if (liveCounter) {
 		liveCounter.textContent = events.length + (events.length === 1 ? " event live" : " events live");
@@ -794,6 +812,14 @@ function bind() {
 	typeFilter.addEventListener("change", renderEventsTable);
 	societyFilter.addEventListener("change", renderEventsTable);
 
+	document.addEventListener("keydown", (event) => {
+		if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === "k") {
+			event.preventDefault();
+			searchInput.focus();
+			searchInput.select();
+		}
+	});
+
 	resetFiltersBtn.addEventListener("click", () => {
 		searchInput.value = "";
 		typeFilter.value = "all";
@@ -826,7 +852,16 @@ function bind() {
 
 	if (switchOrganizerViewBtn) {
 		switchOrganizerViewBtn.addEventListener("click", () => {
-			switchTab("organizer");
+			const enableOrganizerMode = switchOrganizerViewBtn.getAttribute("aria-pressed") !== "true";
+			switchOrganizerViewBtn.setAttribute("aria-pressed", String(enableOrganizerMode));
+			switchOrganizerViewBtn.classList.toggle("is-organizer", enableOrganizerMode);
+
+			const toggleText = switchOrganizerViewBtn.querySelector(".toggle-text");
+			if (toggleText) {
+				toggleText.textContent = enableOrganizerMode ? "Organizer Mode" : "Guest Mode";
+			}
+
+			switchTab(enableOrganizerMode ? "organizer" : "guest");
 			setActiveSideNav("roles");
 			scrollToSection("roles");
 		});
@@ -925,6 +960,22 @@ function init() {
 	updateTypeExtras();
 	switchTab("guest");
 	setActiveSideNav("overview");
+
+	if (switchOrganizerViewBtn) {
+		switchOrganizerViewBtn.setAttribute("aria-pressed", "false");
+		switchOrganizerViewBtn.classList.remove("is-organizer");
+		const toggleText = switchOrganizerViewBtn.querySelector(".toggle-text");
+		if (toggleText) {
+			toggleText.textContent = "Guest Mode";
+		}
+	}
+
+	const searchShortcutKey = document.getElementById("searchShortcutKey");
+	if (searchShortcutKey) {
+		const isApplePlatform = /Mac|iPhone|iPad/i.test(window.navigator.platform);
+		searchShortcutKey.textContent = isApplePlatform ? "CMD + K" : "CTRL + K";
+	}
+
 	updateStudentUI();
 	updateOrganizerUI();
 	refreshAll();
