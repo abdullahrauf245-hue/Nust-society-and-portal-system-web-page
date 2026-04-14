@@ -35,6 +35,9 @@ const jumpStudentBtn = document.getElementById("jumpStudentBtn");
 const jumpOrganizerBtn = document.getElementById("jumpOrganizerBtn");
 const switchOrganizerViewBtn = document.getElementById("switchOrganizerViewBtn");
 const sideNavLinks = document.querySelectorAll(".side-nav-link");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
+const sidebarDrawer = document.getElementById("sidebarDrawer");
 const consoleBox = document.getElementById("consoleBox");
 const toast = document.getElementById("toast");
 
@@ -55,6 +58,39 @@ const newEventType = document.getElementById("newEventType");
 const newEventRegistrationUrl = document.getElementById("newEventRegistrationUrl");
 const newEventExtra1 = document.getElementById("newEventExtra1");
 const newEventExtra2 = document.getElementById("newEventExtra2");
+
+function isMobileDrawerActive() {
+	return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function setMobileMenuState(isOpen) {
+	if (!mobileMenuBtn || !mobileMenuBackdrop || !sidebarDrawer) return;
+
+	const open = Boolean(isOpen) && isMobileDrawerActive();
+	const sidebarFirstLink = sidebarDrawer.querySelector(".side-nav-link");
+	document.body.classList.toggle("mobile-menu-open", open);
+	mobileMenuBtn.classList.toggle("is-open", open);
+	mobileMenuBtn.setAttribute("aria-expanded", String(open));
+	mobileMenuBackdrop.classList.toggle("show", open);
+	sidebarDrawer.classList.toggle("is-open", open);
+
+	if (open && sidebarFirstLink) {
+		sidebarFirstLink.focus();
+	}
+
+	if (!open) {
+		mobileMenuBtn.focus();
+	}
+}
+
+function closeMobileMenu() {
+	setMobileMenuState(false);
+}
+
+function toggleMobileMenu() {
+	const currentlyOpen = document.body.classList.contains("mobile-menu-open");
+	setMobileMenuState(!currentlyOpen);
+}
 
 function createId() {
 	const id = "evt-" + String(eventCounter).padStart(4, "0");
@@ -818,6 +854,28 @@ function bind() {
 			searchInput.focus();
 			searchInput.select();
 		}
+
+		if (event.key === "Escape") {
+			closeMobileMenu();
+		}
+	});
+
+	if (mobileMenuBtn) {
+		mobileMenuBtn.addEventListener("click", () => {
+			toggleMobileMenu();
+		});
+	}
+
+	if (mobileMenuBackdrop) {
+		mobileMenuBackdrop.addEventListener("click", () => {
+			closeMobileMenu();
+		});
+	}
+
+	window.addEventListener("resize", () => {
+		if (!isMobileDrawerActive()) {
+			closeMobileMenu();
+		}
 	});
 
 	resetFiltersBtn.addEventListener("click", () => {
@@ -872,6 +930,7 @@ function bind() {
 			const target = link.dataset.target;
 			setActiveSideNav(target);
 			scrollToSection(target);
+			closeMobileMenu();
 		});
 	});
 

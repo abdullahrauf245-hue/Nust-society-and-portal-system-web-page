@@ -12,8 +12,15 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+	<button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="sidebarDrawer">
+		<span class="mobile-menu-bar"></span>
+		<span class="mobile-menu-bar"></span>
+		<span class="mobile-menu-bar"></span>
+	</button>
+	<button id="mobileMenuBackdrop" class="mobile-menu-backdrop" type="button" aria-label="Close menu"></button>
+
 	<div class="app-shell">
-		<aside class="sidebar">
+		<aside id="sidebarDrawer" class="sidebar" aria-label="Sidebar">
 			<div class="sidebar-inner">
 				<div class="brand-lockup">
 					<span class="brand-mark">NUST Events</span>
