@@ -381,19 +381,19 @@ function renderEventsTable() {
 		const avg = REVIEWABLE_TYPES.has(e.type) ? averageRating(e).toFixed(2) : "N/A";
 		const link = e.registrationUrl ? '<button type="button" class="open-link" data-link="' + e.registrationUrl + '">Open</button>' : "-";
 		const canDelete = Boolean(loggedInOrganizer) && e.createdBy === loggedInOrganizer.name;
-		const manage = canDelete ? '<button type="button" class="delete-event" data-event-id="' + e.id + '">Delete</button>' : "";
+		const manage = canDelete ? '<button type="button" class="delete-event" data-event-id="' + e.id + '">Delete</button>' : "-";
 		return (
 			"<tr>" +
-				"<td>" + (i + 1) + "</td>" +
-				"<td>" + e.title + "</td>" +
-				"<td>" + e.society + "</td>" +
-				"<td><span class=\"pill\">" + e.type + "</span></td>" +
-				"<td><span class=\"pill status-" + e.status + "\">" + e.date + "</span></td>" +
-				"<td>" + e.venue + "</td>" +
-				"<td>" + availableSeats(e) + "</td>" +
-				"<td>" + avg + "</td>" +
-				"<td>" + link + "</td>" +
-				"<td>" + manage + "</td>" +
+				"<td data-label=\"#\">" + (i + 1) + "</td>" +
+				"<td data-label=\"Title\">" + e.title + "</td>" +
+				"<td data-label=\"Society\">" + e.society + "</td>" +
+				"<td data-label=\"Type\"><span class=\"pill\">" + e.type + "</span></td>" +
+				"<td data-label=\"Date\"><span class=\"pill status-" + e.status + "\">" + e.date + "</span></td>" +
+				"<td data-label=\"Venue\">" + e.venue + "</td>" +
+				"<td data-label=\"Seats\">" + availableSeats(e) + "</td>" +
+				"<td data-label=\"Avg Rating\">" + avg + "</td>" +
+				"<td data-label=\"Link\">" + link + "</td>" +
+				"<td data-label=\"Manage\">" + manage + "</td>" +
 			"</tr>"
 		);
 	}).join("");
