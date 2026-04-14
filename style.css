@@ -1299,6 +1299,12 @@ tbody tr:hover {
 		padding: 12px;
 	}
 
+	input,
+	select,
+	.search-shell input {
+		font-size: 16px;
+	}
+
 	.sidebar,
 	.topbar,
 	.card,
@@ -1329,9 +1335,74 @@ tbody tr:hover {
 }
 
 @media (max-width: 480px) {
+	body {
+		line-height: 1.45;
+	}
+
 	.app-shell {
 		padding: 10px;
 		gap: 12px;
+	}
+
+	.workspace,
+	.dashboard {
+		gap: 14px;
+	}
+
+	h1 {
+		font-size: clamp(1.45rem, 7vw, 1.85rem);
+	}
+
+	h2 {
+		font-size: clamp(1.14rem, 5.4vw, 1.35rem);
+	}
+
+	h3 {
+		font-size: 1rem;
+	}
+
+	button {
+		padding: 9px 12px;
+		font-size: 0.82rem;
+		border-radius: 11px;
+	}
+
+	input,
+	select {
+		min-height: 42px;
+		padding: 10px 11px;
+		border-radius: 11px;
+	}
+
+	.topbar-search {
+		margin-top: 14px;
+	}
+
+	.search-shell {
+		min-height: 48px;
+		padding: 0 8px 0 11px;
+		border-radius: 13px;
+	}
+
+	.search-icon {
+		width: 16px;
+		height: 16px;
+	}
+
+	.section-head,
+	.card-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+	}
+
+	.section-head button,
+	.card-head button {
+		width: 100%;
+	}
+
+	.hero-chip-wrap {
+		gap: 8px;
 	}
 
 	.hero-chip {
@@ -1349,7 +1420,302 @@ tbody tr:hover {
 		padding: 14px;
 	}
 
+	.event-card-footer {
+		justify-content: stretch;
+	}
+
+	.event-card-footer .open-link {
+		width: 100%;
+	}
+
+	.filters {
+		gap: 10px;
+		margin-bottom: 14px;
+	}
+
+	.tabs {
+		gap: 8px;
+		margin: 12px 0 16px;
+		padding-bottom: 12px;
+	}
+
+	.tab {
+		padding: 9px 10px;
+		font-size: 0.78rem;
+	}
+
+	td {
+		font-size: 0.81rem;
+	}
+
+	td::before {
+		font-size: 0.62rem;
+		letter-spacing: 0.08em;
+	}
+
 	td {
 		grid-template-columns: minmax(84px, 40%) minmax(0, 1fr);
+	}
+}
+
+@media (max-width: 375px) {
+	.app-shell {
+		padding: 8px;
+		gap: 10px;
+	}
+
+	.sidebar,
+	.topbar,
+	.card,
+	.feature-card,
+	.hero-panel {
+		border-radius: 14px;
+		padding: 12px;
+	}
+
+	.workspace,
+	.dashboard {
+		gap: 12px;
+	}
+
+	.brand-mark {
+		font-size: 1.22rem;
+	}
+
+	.brand-sub {
+		font-size: 0.64rem;
+		letter-spacing: 0.14em;
+	}
+
+	.profile-card {
+		padding: 10px;
+		gap: 8px;
+		border-radius: 14px;
+	}
+
+	.avatar {
+		width: 34px;
+		height: 34px;
+		font-size: 0.74rem;
+	}
+
+	.profile-name {
+		font-size: 0.82rem;
+	}
+
+	.profile-meta {
+		font-size: 0.62rem;
+		letter-spacing: 0.1em;
+	}
+
+	.side-nav-link {
+		padding: 9px 10px;
+		font-size: 0.78rem;
+		border-radius: 10px;
+	}
+
+	.mode-control {
+		padding: 10px;
+		border-radius: 12px;
+	}
+
+	.sidebar-cta {
+		padding: 8px 10px 8px 34px;
+		min-width: 0;
+	}
+
+	.toggle-knob {
+		left: 8px;
+		width: 16px;
+		height: 16px;
+	}
+
+	.sidebar-cta.is-organizer .toggle-knob {
+		transform: translate(8px, -50%);
+	}
+
+	.toggle-text {
+		font-size: 0.72rem;
+	}
+
+	h1 {
+		font-size: clamp(1.26rem, 6.6vw, 1.55rem);
+	}
+
+	h2 {
+		font-size: clamp(1.06rem, 5.1vw, 1.24rem);
+	}
+
+	.eyebrow,
+	.mini-label,
+	.section-kicker,
+	.topbar-search > span,
+	.stat-label,
+	.widget-label {
+		font-size: 0.62rem;
+		letter-spacing: 0.1em;
+	}
+
+	.sub {
+		font-size: 0.84rem;
+	}
+
+	.made-by {
+		font-size: 0.58rem;
+		letter-spacing: 0.08em;
+	}
+
+	.search-shell {
+		min-height: 44px;
+		padding: 0 7px 0 10px;
+	}
+
+	.hero-chip {
+		font-size: 0.65rem;
+		padding: 7px 10px;
+	}
+
+	.hero-live {
+		font-size: 0.72rem;
+	}
+
+	.hero-live-dot,
+	.live-dot {
+		width: 8px;
+		height: 8px;
+	}
+
+	.stats-grid,
+	.stack-panel,
+	.featured-grid {
+		gap: 10px;
+	}
+
+	.mini-widget,
+	.mini-card,
+	.event-card,
+	.block {
+		padding: 12px;
+		border-radius: 14px;
+	}
+
+	.widget-value {
+		font-size: clamp(1.25rem, 7.5vw, 1.62rem);
+	}
+
+	.widget-note {
+		font-size: 0.76rem;
+	}
+
+	.live-pill {
+		font-size: 0.58rem;
+		padding: 3px 7px;
+	}
+
+	.sparkline {
+		height: 25px;
+		gap: 3px;
+	}
+
+	.sparkline-bar {
+		width: 4px;
+	}
+
+	.section-head,
+	.card-head {
+		margin-bottom: 12px;
+		padding-bottom: 12px;
+	}
+
+	.event-card h3 {
+		font-size: 0.95rem;
+	}
+
+	.event-card-copy {
+		font-size: 0.8rem;
+	}
+
+	.event-card-meta span {
+		font-size: 0.6rem;
+	}
+
+	.event-card-meta strong {
+		font-size: 0.79rem;
+	}
+
+	.pill {
+		padding: 4px 8px;
+		font-size: 0.58rem;
+	}
+
+	button,
+	.tab {
+		font-size: 0.75rem;
+		padding: 8px 10px;
+	}
+
+	.console {
+		min-height: 130px;
+		padding: 12px;
+		font-size: 0.73rem;
+		border-radius: 12px;
+	}
+
+	tbody {
+		gap: 10px;
+	}
+
+	tbody tr {
+		padding: 0 10px;
+		border-radius: 12px;
+	}
+
+	td {
+		grid-template-columns: minmax(74px, 38%) minmax(0, 1fr);
+		gap: 6px;
+		padding: 8px 0;
+		font-size: 0.77rem;
+	}
+
+	td::before {
+		font-size: 0.56rem;
+	}
+
+	.open-link,
+	.delete-event {
+		padding: 7px 10px;
+		font-size: 0.66rem;
+	}
+
+	.toast {
+		left: 10px;
+		right: 10px;
+		bottom: 10px;
+		padding: 10px 12px;
+		font-size: 0.76rem;
+	}
+}
+
+@media (max-width: 340px) {
+	h1 {
+		font-size: 1.2rem;
+	}
+
+	.brand-mark {
+		font-size: 1.1rem;
+	}
+
+	.search-shell {
+		min-height: 40px;
+	}
+
+	.widget-value {
+		font-size: 1.2rem;
+	}
+
+	td {
+		grid-template-columns: 1fr;
+		gap: 4px;
+		align-items: start;
 	}
 }
