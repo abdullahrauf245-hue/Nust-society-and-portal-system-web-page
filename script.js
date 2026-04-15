@@ -1,26 +1,21 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = "https://xargsubmycnxehyiypxy.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhcmdzdWJteWNueGVoeWl5cHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTc5OTMsImV4cCI6MjA5MTgzMzk5M30.tz5ql4lNz8x8LMmY4BLyGj_zo51YHoP6ryNdJW_Vb3Y";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
 
-const societies = [
-	{ name: "NUST Music Society", category: "Cultural", password: "nms123", eventIds: [] },
-	{ name: "RIC", category: "Fundraiser", password: "ric123", eventIds: [] },
-	{ name: "NUST Entrepreneurship Club (NEC)", category: "Technical", password: "nec123", eventIds: [] },
-	{ name: "ACM", category: "Technical", password: "acm123", eventIds: [] },
-	{ name: "Vyro.ai", category: "Technical", password: "vyro123", eventIds: [] },
-	{ name: "IEEE", category: "Technical", password: "ieee123", eventIds: [] },
-	{ name: "SOULS", category: "Cultural", password: "souls123", eventIds: [] },
-	{ name: "AND", category: "Technical", password: "and123", eventIds: [] }
-	
-];
-
-const events = [];
-const students = [];
-
+// ─── State ─────────────────────────────────────────────────────────────────────
+let societies = [];
+let events = [];
+let students = [];
 let loggedInStudent = null;
 let loggedInOrganizer = null;
-let eventCounter = 1;
 let toastTimer = null;
-let scrollSpyEnabled = true; // flag to pause spy when user clicks a nav link
+let scrollSpyEnabled = true;
 
+// ─── DOM refs ──────────────────────────────────────────────────────────────────
 const resultCount = document.getElementById("resultCount");
 const eventsTbody = document.getElementById("eventsTbody");
 const searchInput = document.getElementById("searchInput");
@@ -59,13 +54,13 @@ const newEventRegistrationUrl = document.getElementById("newEventRegistrationUrl
 const newEventExtra1 = document.getElementById("newEventExtra1");
 const newEventExtra2 = document.getElementById("newEventExtra2");
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 function isMobileDrawerActive() {
 	return window.matchMedia("(max-width: 900px)").matches;
 }
 
 function setMobileMenuState(isOpen) {
 	if (!mobileMenuBtn || !mobileMenuBackdrop || !sidebarDrawer) return;
-
 	const open = Boolean(isOpen) && isMobileDrawerActive();
 	const sidebarFirstLink = sidebarDrawer.querySelector(".side-nav-link");
 	document.body.classList.toggle("mobile-menu-open", open);
@@ -73,14 +68,8 @@ function setMobileMenuState(isOpen) {
 	mobileMenuBtn.setAttribute("aria-expanded", String(open));
 	mobileMenuBackdrop.classList.toggle("show", open);
 	sidebarDrawer.classList.toggle("is-open", open);
-
-	if (open && sidebarFirstLink) {
-		sidebarFirstLink.focus();
-	}
-
-	if (!open) {
-		mobileMenuBtn.focus();
-	}
+	if (open && sidebarFirstLink) sidebarFirstLink.focus();
+	if (!open) mobileMenuBtn.focus();
 }
 
 function closeMobileMenu() {
@@ -92,34 +81,27 @@ function toggleMobileMenu() {
 	setMobileMenuState(!currentlyOpen);
 }
 
-function createId() {
-	const id = "evt-" + String(eventCounter).padStart(4, "0");
-	eventCounter += 1;
-	return id;
+function findSocietyById(id) {
+	return societies.find((s) => s.id === id) || null;
 }
 
-function bySociety(name) {
-	return societies.find((s) => s.name.toLowerCase() === String(name).toLowerCase()) || null;
-}
-
-function byEvent(id) {
+function findEventById(id) {
 	return events.find((e) => e.id === id) || null;
 }
 
 function availableSeats(event) {
-	return event.capacity - event.registeredCmsIds.length;
+	return event.seats - (event._registrationCount || 0);
 }
 
 function averageRating(event) {
-	if (!event.reviews.length) return 0;
-	const total = event.reviews.reduce((sum, r) => sum + r.rating, 0);
-	return total / event.reviews.length;
+	if (!event._reviews || !event._reviews.length) return 0;
+	const total = event._reviews.reduce((sum, r) => sum + r.rating, 0);
+	return total / event._reviews.length;
 }
 
 function normalizeRegistrationUrl(rawUrl) {
 	const raw = String(rawUrl || "").trim();
 	if (!raw) return "";
-
 	const withProtocol = /^https?:\/\//i.test(raw) ? raw : "https://" + raw;
 	try {
 		return new URL(withProtocol).toString();
@@ -136,13 +118,76 @@ function logLine(message) {
 function toastMsg(message) {
 	toast.textContent = message;
 	toast.classList.add("show");
-
 	clearTimeout(toastTimer);
 	toastTimer = setTimeout(() => {
 		toast.classList.remove("show");
 	}, 2000);
 }
 
+function formatDate(dateStr) {
+	if (!dateStr) return "TBA";
+	const d = new Date(dateStr);
+	if (isNaN(d)) return dateStr;
+	const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	return d.getDate() + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+}
+
+// ─── Supabase Data Loading ─────────────────────────────────────────────────────
+async function loadSocieties() {
+	const { data, error } = await supabase.from("societies").select().order("name");
+	if (error) {
+		logLine("Error loading societies: " + error.message);
+		return;
+	}
+	societies = data || [];
+}
+
+async function loadEvents() {
+	const { data, error } = await supabase
+		.from("events")
+		.select(`
+			*,
+			societies (
+				name,
+				short_name
+			)
+		`)
+		.order("date", { ascending: true });
+
+	if (error) {
+		logLine("Error loading events: " + error.message);
+		return;
+	}
+
+	events = (data || []).map((e) => ({
+		...e,
+		society: e.societies?.name || "Unknown",
+		societyShortName: e.societies?.short_name || "",
+	}));
+
+	// Load registration counts and reviews for each event
+	await Promise.all(events.map(async (evt) => {
+		const { count } = await supabase
+			.from("registrations")
+			.select("*", { count: "exact", head: true })
+			.eq("event_id", evt.id)
+			.eq("status", "active");
+		evt._registrationCount = count || 0;
+
+		const { data: reviews } = await supabase
+			.from("reviews")
+			.select()
+			.eq("event_id", evt.id);
+		evt._reviews = reviews || [];
+	}));
+}
+
+async function refreshAllData() {
+	await Promise.all([loadSocieties(), loadEvents()]);
+	refreshAll();
+}
+
+// ─── Rendering ─────────────────────────────────────────────────────────────────
 function updateTypeExtras() {
 	const type = newEventType.value;
 	if (type === "workshop") {
@@ -161,88 +206,6 @@ function updateTypeExtras() {
 		newEventExtra1.placeholder = "Speaker";
 		newEventExtra2.placeholder = "Topic";
 	}
-}
-
-function seedRealEvents() {
-	const initial = [
-		{
-			title: "NUST Music Fest (NMF)",
-			type: "concert",
-			society: "NUST Music Society",
-			date: "DELAYED - Originally 21-22 Apr 2026",
-			venue: "NBS GROUND, NUST H-12",
-			capacity: 500,
-			description: "NUST annual music festival. Currently delayed.",
-			status: "delayed",
-			registrationUrl: "",
-			details: { performer: "Various Artists", genre: "Live Music / Multi-Genre" }
-		},
-		{
-			title: "HAAMI 2026",
-			type: "concert",
-			society: "RIC",
-			date: "DELAYED - Originally 2-3 Apr 2026",
-			venue: "NUST Main Campus",
-			capacity: 1000,
-			description: "Fundraiser with Hassan Raheem. Postponed.",
-			status: "delayed",
-			registrationUrl: "",
-			details: { performer: "Hassan Raheem", genre: "Pop / R&B" }
-		},
-		{
-			title: "AIcon 2026",
-			type: "competition",
-			society: "NUST Entrepreneurship Club (NEC)",
-			date: "Expected: End of April 2026",
-			venue: "SEECS, NUST",
-			capacity: 150,
-			description: "AI-focused hackathon by NEC, ACM, Hack Club.",
-			status: "expected",
-			registrationUrl: "",
-			details: { prizePool: "TBA", teamSize: 3 }
-		},
-		{
-			title: "VYROTHON 2026",
-			type: "competition",
-			society: "Vyro.ai",
-			date: "18-Apr-2026",
-			venue: "Vyro Office, NSTP NUST H-12",
-			capacity: 100,
-			description: "In-house hackathon with around $5000 prize pool.",
-			status: "scheduled",
-			registrationUrl: "https://vyrothon.vyro.ai/",
-			details: { prizePool: "~$5,000 USD", teamSize: 3 }
-		}
-	];
-
-	initial.forEach((e) => {
-		const id = createId();
-		const evt = {
-			id,
-			...e,
-			createdBy: e.society,
-			registeredCmsIds: [],
-			reviews: []
-		};
-		events.push(evt);
-		const host = bySociety(e.society);
-		if (host) {
-			host.eventIds.push(id);
-		}
-	});
-}
-
-function filteredEvents() {
-	const q = searchInput.value.trim().toLowerCase();
-	const t = typeFilter.value;
-	const s = societyFilter.value;
-
-	return events.filter((e) => {
-		const qOk = !q || e.title.toLowerCase().includes(q) || e.society.toLowerCase().includes(q) || e.type.includes(q);
-		const tOk = t === "all" || e.type === t;
-		const sOk = s === "all" || e.society === s;
-		return qOk && tOk && sOk;
-	});
 }
 
 function renderFilters() {
@@ -267,18 +230,15 @@ function renderOrganizerSelect() {
 }
 
 function totalRegistrations() {
-	return events.reduce((sum, event) => sum + event.registeredCmsIds.length, 0);
+	return events.reduce((sum, event) => sum + (event._registrationCount || 0), 0);
 }
 
 function scrollToSection(sectionId) {
 	const section = document.getElementById(sectionId);
 	if (section) {
-		// Pause scroll spy briefly so clicking doesn't flicker the nav
 		scrollSpyEnabled = false;
 		section.scrollIntoView({ behavior: "smooth", block: "start" });
-		setTimeout(() => {
-			scrollSpyEnabled = true;
-		}, 800);
+		setTimeout(() => { scrollSpyEnabled = true; }, 800);
 	}
 }
 
@@ -293,9 +253,8 @@ function renderDashboardStats() {
 
 	const liveEvents = events.length;
 	const societyCount = new Set(events.map((event) => event.society)).size;
-	const studentCount = students.length;
 	const registrations = totalRegistrations();
-	const totalCapacity = events.reduce((sum, event) => sum + Number(event.capacity || 0), 0);
+	const totalCapacity = events.reduce((sum, event) => sum + Number(event.seats || 0), 0);
 	const registrationFill = totalCapacity > 0 ? Math.min(100, Math.round((registrations / totalCapacity) * 100)) : 0;
 
 	const societyEventCount = {};
@@ -343,7 +302,7 @@ function renderDashboardStats() {
 				'<p class="widget-label">Student Accounts</p>' +
 				'<span class="widget-note">Directory</span>' +
 			'</div>' +
-			'<div class="widget-value">' + String(studentCount).padStart(2, "0") + '</div>' +
+			'<div class="widget-value">' + String(students.length).padStart(2, "0") + '</div>' +
 			'<p class="widget-note">Registered users who can enroll and review</p>' +
 		'</article>';
 
@@ -353,8 +312,8 @@ function renderDashboardStats() {
 }
 
 function featuredScore(event) {
-	const statusScore = { scheduled: 3, expected: 2, delayed: 1 }[event.status] || 0;
-	const linkScore = event.registrationUrl ? 1 : 0;
+	const statusScore = { scheduled: 3, expected: 2, delayed: 1 }[event.status?.toLowerCase()] || 0;
+	const linkScore = event.registration_link ? 1 : 0;
 	return statusScore * 10 + linkScore;
 }
 
@@ -365,9 +324,7 @@ function renderFeaturedEvents() {
 		.sort((a, b) => {
 			const scoreDelta = featuredScore(b) - featuredScore(a);
 			if (scoreDelta !== 0) return scoreDelta;
-			const bOrder = Number(String(b.id).split("-")[1] || 0);
-			const aOrder = Number(String(a.id).split("-")[1] || 0);
-			return bOrder - aOrder;
+			return new Date(b.date) - new Date(a.date);
 		})
 		.slice(0, 3);
 
@@ -377,31 +334,44 @@ function renderFeaturedEvents() {
 	}
 
 	featuredEventsGrid.innerHTML = featured.map((event, index) => {
-		const avg = REVIEWABLE_TYPES.has(event.type) ? averageRating(event).toFixed(2) : "N/A";
+		const avg = REVIEWABLE_TYPES.has(event.type) ? averageRating(event).toFixed(1) : "N/A";
 		const largeClass = index === 0 ? "event-card-large" : "";
-		const linkMarkup = event.registrationUrl
-			? '<button type="button" class="open-link" data-link="' + event.registrationUrl + '">Open</button>'
+		const linkMarkup = event.registration_link
+			? '<button type="button" class="open-link" data-link="' + event.registration_link + '">Open</button>'
 			: '<span class="muted">No registration link</span>';
 
 		return (
 			'<article class="event-card ' + largeClass + '">' +
 				'<div class="event-card-head">' +
 					'<span class="pill">' + event.type + '</span>' +
-					'<span class="pill status-' + event.status + '">' + event.status + '</span>' +
+					'<span class="pill status-' + (event.status || "").toLowerCase() + '">' + event.status + '</span>' +
 				'</div>' +
 				'<h3>' + event.title + '</h3>' +
 				'<p class="muted">' + event.society + '</p>' +
 				'<div class="event-card-meta">' +
-					'<div><span>Date</span><strong>' + event.date + '</strong></div>' +
+					'<div><span>Date</span><strong>' + formatDate(event.date) + '</strong></div>' +
 					'<div><span>Venue</span><strong>' + event.venue + '</strong></div>' +
 					'<div><span>Seats</span><strong>' + availableSeats(event) + '</strong></div>' +
 					'<div><span>Avg Rating</span><strong>' + avg + '</strong></div>' +
 				'</div>' +
-				'<p class="event-card-copy">' + event.description + '</p>' +
+				'<p class="event-card-copy">' + (event.description || "") + '</p>' +
 				'<div class="event-card-footer">' + linkMarkup + '</div>' +
 			'</article>'
 		);
 	}).join("");
+}
+
+function filteredEvents() {
+	const q = searchInput.value.trim().toLowerCase();
+	const t = typeFilter.value;
+	const s = societyFilter.value;
+
+	return events.filter((e) => {
+		const qOk = !q || e.title.toLowerCase().includes(q) || e.society.toLowerCase().includes(q) || e.type.includes(q);
+		const tOk = t === "all" || e.type === t;
+		const sOk = s === "all" || e.society === s;
+		return qOk && tOk && sOk;
+	});
 }
 
 function renderEventsTable() {
@@ -414,9 +384,9 @@ function renderEventsTable() {
 	}
 
 	eventsTbody.innerHTML = rows.map((e, i) => {
-		const avg = REVIEWABLE_TYPES.has(e.type) ? averageRating(e).toFixed(2) : "N/A";
-		const link = e.registrationUrl ? '<button type="button" class="open-link" data-link="' + e.registrationUrl + '">Open</button>' : "-";
-		const canDelete = Boolean(loggedInOrganizer) && e.createdBy === loggedInOrganizer.name;
+		const avg = REVIEWABLE_TYPES.has(e.type) ? averageRating(e).toFixed(1) : "N/A";
+		const link = e.registration_link ? '<button type="button" class="open-link" data-link="' + e.registration_link + '">Open</button>' : "-";
+		const canDelete = Boolean(loggedInOrganizer) && e.society_id === loggedInOrganizer.id;
 		const manage = canDelete ? '<button type="button" class="delete-event" data-event-id="' + e.id + '">Delete</button>' : "-";
 		return (
 			"<tr>" +
@@ -424,7 +394,7 @@ function renderEventsTable() {
 				"<td data-label=\"Title\">" + e.title + "</td>" +
 				"<td data-label=\"Society\">" + e.society + "</td>" +
 				"<td data-label=\"Type\"><span class=\"pill\">" + e.type + "</span></td>" +
-				"<td data-label=\"Date\"><span class=\"pill status-" + e.status + "\">" + e.date + "</span></td>" +
+				"<td data-label=\"Date\"><span class=\"pill status-" + (e.status || "").toLowerCase() + "\">" + formatDate(e.date) + "</span></td>" +
 				"<td data-label=\"Venue\">" + e.venue + "</td>" +
 				"<td data-label=\"Seats\">" + availableSeats(e) + "</td>" +
 				"<td data-label=\"Avg Rating\">" + avg + "</td>" +
@@ -456,7 +426,7 @@ function updateStudentUI() {
 		studentActions.classList.add("hidden");
 		return;
 	}
-	studentSession.textContent = "Logged in: " + loggedInStudent.name + " (" + loggedInStudent.cmsId + ")";
+	studentSession.textContent = "Logged in: " + loggedInStudent.name + " (" + loggedInStudent.cms_id + ")";
 	studentActions.classList.remove("hidden");
 }
 
@@ -470,60 +440,83 @@ function updateOrganizerUI() {
 	organizerActions.classList.remove("hidden");
 }
 
-function registerStudentAccount(payload) {
-	if (students.some((s) => s.cmsId === payload.cmsId)) {
-		toastMsg("CMS ID already registered");
-		logLine("CMS ID already registered.");
+// ─── Auth Operations ───────────────────────────────────────────────────────────
+async function registerStudentAccount(payload) {
+	const { data, error } = await supabase
+		.from("students")
+		.insert({
+			name: payload.name,
+			cms_id: payload.cmsId,
+			email: payload.email,
+			password_hash: payload.password,
+			section: payload.section,
+		})
+		.select()
+		.single();
+
+	if (error) {
+		if (error.code === "23505") {
+			toastMsg("CMS ID or email already exists");
+			logLine("CMS ID or email already registered.");
+			return;
+		}
+		toastMsg("Registration failed");
+		logLine("Registration error: " + error.message);
 		return;
 	}
 
-	students.push({
-		name: payload.name,
-		cmsId: payload.cmsId,
-		email: payload.email,
-		password: payload.password,
-		section: payload.section,
-		registeredEventIds: []
-	});
-
+	students.push(data);
 	toastMsg("Student registered");
 	logLine("Registration successful! Welcome, " + payload.name + ".");
 }
 
-function loginStudent(cmsId, password) {
-	const student = students.find((s) => s.cmsId === cmsId && s.password === password) || null;
-	if (!student) {
+async function loginStudent(cmsId, password) {
+	const { data, error } = await supabase
+		.from("students")
+		.select()
+		.eq("cms_id", cmsId)
+		.eq("password_hash", password)
+		.single();
+
+	if (error || !data) {
 		toastMsg("Invalid student credentials");
 		logLine("Invalid CMS ID or password.");
 		return;
 	}
 
-	loggedInStudent = student;
+	loggedInStudent = data;
 	updateStudentUI();
 	toastMsg("Student login successful");
-	logLine("Login successful! Welcome back, " + student.name + ".");
+	logLine("Login successful! Welcome back, " + data.name + ".");
 }
 
-function loginOrganizer(societyName, password) {
-	const society = societies.find((s) => s.name === societyName && s.password === password) || null;
-	if (!society) {
+async function loginOrganizer(societyName, password) {
+	const { data, error } = await supabase
+		.from("societies")
+		.select()
+		.eq("name", societyName)
+		.eq("password_hash", password)
+		.single();
+
+	if (error || !data) {
 		toastMsg("Invalid organizer credentials");
 		logLine("Invalid society name or password.");
 		return;
 	}
 
-	loggedInOrganizer = society;
+	loggedInOrganizer = data;
 	updateOrganizerUI();
 	toastMsg("Organizer login successful");
-	logLine("Login successful! Welcome, " + society.name + ".");
+	logLine("Login successful! Welcome, " + data.name + ".");
 }
 
-function registerForEvent() {
+// ─── Event Registration ────────────────────────────────────────────────────────
+async function registerForEvent() {
 	if (!loggedInStudent) {
 		toastMsg("Login as student first");
 		return;
 	}
-	const event = byEvent(studentEventSelect.value);
+	const event = findEventById(studentEventSelect.value);
 	if (!event) {
 		toastMsg("Invalid event selection");
 		return;
@@ -533,51 +526,74 @@ function registerForEvent() {
 		logLine("Sorry, " + event.title + " is full.");
 		return;
 	}
-	if (event.registeredCmsIds.includes(loggedInStudent.cmsId)) {
+
+	const { data: existing } = await supabase
+		.from("registrations")
+		.select()
+		.eq("event_id", event.id)
+		.eq("student_id", loggedInStudent.id)
+		.eq("status", "active")
+		.single();
+
+	if (existing) {
 		toastMsg("Already registered");
 		logLine(loggedInStudent.name + " is already registered.");
 		return;
 	}
 
-	event.registeredCmsIds.push(loggedInStudent.cmsId);
-	loggedInStudent.registeredEventIds.push(event.id);
+	const { error } = await supabase
+		.from("registrations")
+		.insert({ event_id: event.id, student_id: loggedInStudent.id, status: "active" });
+
+	if (error) {
+		toastMsg("Registration failed");
+		logLine("Registration error: " + error.message);
+		return;
+	}
+
+	event._registrationCount = (event._registrationCount || 0) + 1;
 	refreshAll();
 	toastMsg("Registered");
 	logLine(loggedInStudent.name + " successfully registered for " + event.title + ".");
 }
 
-function cancelEventRegistration() {
+async function cancelEventRegistration() {
 	if (!loggedInStudent) {
 		toastMsg("Login as student first");
 		return;
 	}
-	const event = byEvent(studentEventSelect.value);
+	const event = findEventById(studentEventSelect.value);
 	if (!event) {
 		toastMsg("Invalid event selection");
 		return;
 	}
 
-	const before = event.registeredCmsIds.length;
-	event.registeredCmsIds = event.registeredCmsIds.filter((id) => id !== loggedInStudent.cmsId);
-	loggedInStudent.registeredEventIds = loggedInStudent.registeredEventIds.filter((id) => id !== event.id);
+	const { error } = await supabase
+		.from("registrations")
+		.update({ status: "cancelled" })
+		.eq("event_id", event.id)
+		.eq("student_id", loggedInStudent.id)
+		.eq("status", "active");
 
-	if (before === event.registeredCmsIds.length) {
-		toastMsg("Not registered in this event");
-		logLine(loggedInStudent.name + " was not registered.");
+	if (error) {
+		toastMsg("Cancellation failed");
+		logLine("Cancellation error: " + error.message);
 		return;
 	}
 
+	event._registrationCount = Math.max(0, (event._registrationCount || 0) - 1);
 	refreshAll();
 	toastMsg("Registration cancelled");
 	logLine(loggedInStudent.name + " removed from " + event.title + ".");
 }
 
-function submitReview() {
+// ─── Reviews ───────────────────────────────────────────────────────────────────
+async function submitReview() {
 	if (!loggedInStudent) {
 		toastMsg("Login as student first");
 		return;
 	}
-	const event = byEvent(studentEventSelect.value);
+	const event = findEventById(studentEventSelect.value);
 	if (!event) {
 		toastMsg("Invalid event selection");
 		return;
@@ -593,12 +609,30 @@ function submitReview() {
 		return;
 	}
 
-	const existing = event.reviews.find((r) => r.cmsId === loggedInStudent.cmsId) || null;
-	if (existing) {
-		existing.feedback = reviewText.value.trim();
-		existing.rating = rating;
+	const { data, error } = await supabase
+		.from("reviews")
+		.upsert({
+			event_id: event.id,
+			student_id: loggedInStudent.id,
+			rating,
+			feedback: reviewText.value.trim(),
+		}, { onConflict: "event_id,student_id" })
+		.select()
+		.single();
+
+	if (error) {
+		toastMsg("Review submission failed");
+		logLine("Review error: " + error.message);
+		return;
+	}
+
+	// Update local cache
+	const existingIdx = (event._reviews || []).findIndex((r) => r.student_id === loggedInStudent.id);
+	if (existingIdx >= 0) {
+		event._reviews[existingIdx] = data;
 	} else {
-		event.reviews.push({ cmsId: loggedInStudent.cmsId, feedback: reviewText.value.trim(), rating });
+		if (!event._reviews) event._reviews = [];
+		event._reviews.push(data);
 	}
 
 	reviewText.value = "";
@@ -609,100 +643,149 @@ function submitReview() {
 }
 
 function showEventReviews() {
-	const event = byEvent(studentEventSelect.value);
+	const event = findEventById(studentEventSelect.value);
 	if (!event) return;
 	if (!REVIEWABLE_TYPES.has(event.type)) {
 		logLine("This event does not support reviews.");
 		return;
 	}
-	if (!event.reviews.length) {
+	if (!event._reviews || !event._reviews.length) {
 		logLine("No reviews yet for " + event.title + ".");
 		return;
 	}
 
-	const lines = event.reviews.map((r, i) => "  " + (i + 1) + ". " + r.feedback + " | Rating: " + r.rating + "/5");
+	const lines = event._reviews.map((r, i) => "  " + (i + 1) + ". " + (r.feedback || "No feedback") + " | Rating: " + r.rating + "/5");
 	logLine("Reviews for " + event.title + ":\n" + lines.join("\n"));
 }
 
-function showStudentProfile() {
+async function showStudentProfile() {
 	if (!loggedInStudent) return;
+
+	const { count } = await supabase
+		.from("registrations")
+		.select("*", { count: "exact", head: true })
+		.eq("student_id", loggedInStudent.id)
+		.eq("status", "active");
+
 	const lines = [
 		"Name: " + loggedInStudent.name,
-		"CMS ID: " + loggedInStudent.cmsId,
+		"CMS ID: " + loggedInStudent.cms_id,
 		"Email: " + loggedInStudent.email,
 		"Section: " + loggedInStudent.section,
-		"Registered Events: " + loggedInStudent.registeredEventIds.length
+		"Registered Events: " + (count || 0)
 	];
 	logLine(lines.join("\n"));
 }
 
-function showUpcoming() {
+async function showUpcoming() {
 	if (!loggedInStudent) return;
-	if (!loggedInStudent.registeredEventIds.length) {
+
+	const { data, error } = await supabase
+		.from("registrations")
+		.select(`
+			*,
+			events (
+				id, title, type, date, venue, status
+			)
+		`)
+		.eq("student_id", loggedInStudent.id)
+		.eq("status", "active");
+
+	if (error || !data || !data.length) {
 		logLine("You have no upcoming events.");
 		return;
 	}
 
 	const lines = ["Your Upcoming Events:"];
-	loggedInStudent.registeredEventIds.forEach((id) => {
-		const event = byEvent(id);
-		if (event) {
-			lines.push("  - " + event.title + " | " + event.date + " | " + event.venue);
+	data.forEach((r) => {
+		const evt = r.events;
+		if (evt) {
+			lines.push("  - " + evt.title + " | " + formatDate(evt.date) + " | " + evt.venue);
 		}
 	});
 	logLine(lines.join("\n"));
 }
 
-function showMyEvents() {
+// ─── Organizer Operations ──────────────────────────────────────────────────────
+async function showMyEvents() {
 	if (!loggedInOrganizer) return;
-	const mine = events.filter((e) => e.society === loggedInOrganizer.name);
-	if (!mine.length) {
+
+	const { data, error } = await supabase
+		.from("events")
+		.select()
+		.eq("society_id", loggedInOrganizer.id)
+		.order("date", { ascending: true });
+
+	if (error) {
+		logLine("Error loading events: " + error.message);
+		return;
+	}
+
+	if (!data || !data.length) {
 		logLine(loggedInOrganizer.name + " has no events yet.");
 		return;
 	}
+
 	const lines = ["Events by " + loggedInOrganizer.name + ":"];
-	mine.forEach((e, i) => lines.push("  " + (i + 1) + ". " + e.title + " | " + e.date));
+	data.forEach((e, i) => lines.push("  " + (i + 1) + ". " + e.title + " | " + formatDate(e.date)));
 	logLine(lines.join("\n"));
 }
 
-function showAttendees() {
+async function showAttendees() {
 	if (!loggedInOrganizer) return;
-	const mine = events.filter((e) => e.society === loggedInOrganizer.name);
-	if (!mine.length) {
+
+	const { data: myEvents, error: e1 } = await supabase
+		.from("events")
+		.select()
+		.eq("society_id", loggedInOrganizer.id);
+
+	if (e1 || !myEvents || !myEvents.length) {
 		logLine("Your society has no events yet.");
 		return;
 	}
 
 	const lines = [];
-	mine.forEach((event) => {
+	for (const event of myEvents) {
+		const { data: regs, error: e2 } = await supabase
+			.from("registrations")
+			.select(`
+				*,
+				students (
+					id, name, cms_id, email, section
+				)
+			`)
+			.eq("event_id", event.id)
+			.eq("status", "active")
+			.order("registered_at", { ascending: false });
+
 		lines.push("Attendees for " + event.title + ":");
-		if (!event.registeredCmsIds.length) {
+		if (e2 || !regs || !regs.length) {
 			lines.push("  No attendees yet.");
-			return;
+			continue;
 		}
-		event.registeredCmsIds.forEach((cmsId, i) => {
-			const student = students.find((s) => s.cmsId === cmsId);
-			if (student) {
-				lines.push("  " + (i + 1) + ". " + student.name + " (" + student.cmsId + ") | " + student.email);
+		regs.forEach((r, i) => {
+			const s = r.students;
+			if (s) {
+				lines.push("  " + (i + 1) + ". " + s.name + " (" + s.cms_id + ") | " + s.email);
 			}
 		});
-	});
+	}
 	logLine(lines.join("\n"));
 }
 
-function deleteOrganizerEvent(eventId) {
+async function deleteOrganizerEvent(eventId) {
 	if (!loggedInOrganizer) {
 		toastMsg("Login as organizer first");
 		return;
 	}
 
-	const event = byEvent(eventId);
+	const event = findEventById(eventId);
 	if (!event) {
 		toastMsg("Event not found");
 		return;
 	}
 
-	if (event.createdBy !== loggedInOrganizer.name) {
+	if (event.society_id !== loggedInOrganizer.id) {
 		toastMsg("You can only delete your own events");
 		return;
 	}
@@ -711,32 +794,20 @@ function deleteOrganizerEvent(eventId) {
 		return;
 	}
 
-	const eventIndex = events.findIndex((e) => e.id === eventId);
-	if (eventIndex === -1) {
-		toastMsg("Event not found");
+	const { error } = await supabase.from("events").delete().eq("id", eventId);
+	if (error) {
+		toastMsg("Delete failed");
+		logLine("Delete error: " + error.message);
 		return;
 	}
 
-	events.splice(eventIndex, 1);
-	students.forEach((student) => {
-		student.registeredEventIds = student.registeredEventIds.filter((id) => id !== eventId);
-	});
-
-	const hostSociety = bySociety(event.society);
-	if (hostSociety) {
-		hostSociety.eventIds = hostSociety.eventIds.filter((id) => id !== eventId);
-	}
-
-	if (loggedInOrganizer) {
-		loggedInOrganizer.eventIds = loggedInOrganizer.eventIds.filter((id) => id !== eventId);
-	}
-
+	events = events.filter((e) => e.id !== eventId);
 	refreshAll();
 	toastMsg("Event deleted");
 	logLine('Event "' + event.title + '" deleted by ' + loggedInOrganizer.name + '.');
 }
 
-function addOrganizerEvent() {
+async function addOrganizerEvent() {
 	if (!loggedInOrganizer) {
 		toastMsg("Login as organizer first");
 		return;
@@ -758,43 +829,52 @@ function addOrganizerEvent() {
 		return;
 	}
 
-	const details = {};
-	if (type === "workshop") {
-		details.duration = extra1;
-		details.prerequisite = extra2;
-	}
-	if (type === "concert") {
-		details.performer = extra1;
-		details.genre = extra2;
-	}
-	if (type === "competition") {
-		details.prizePool = extra1;
-		details.teamSize = Number(extra2) || 1;
-	}
-	if (type === "seminar") {
-		details.speaker = extra1;
-		details.topic = extra2;
-	}
-
-	const event = {
-		id: createId(),
+	const payload = {
 		title,
+		society_id: loggedInOrganizer.id,
 		type,
-		society: loggedInOrganizer.name,
 		date,
 		venue,
-		capacity: Number.isFinite(capRaw) && capRaw > 0 ? capRaw : 50,
+		seats: Number.isFinite(capRaw) && capRaw > 0 ? capRaw : 50,
 		description,
-		createdBy: loggedInOrganizer.name,
-		status: "scheduled",
-		registrationUrl,
-		details,
-		registeredCmsIds: [],
-		reviews: []
+		status: "Scheduled",
+		registration_link: registrationUrl || null,
 	};
 
-	events.push(event);
-	loggedInOrganizer.eventIds.push(event.id);
+	if (type === "workshop") {
+		payload.duration = extra1;
+		payload.prerequisite = extra2;
+	}
+	if (type === "concert") {
+		payload.performer = extra1;
+		payload.genre = extra2;
+	}
+	if (type === "competition") {
+		payload.prize_pool = extra1;
+		payload.team_size = Number(extra2) || 1;
+	}
+	if (type === "seminar") {
+		payload.speaker = extra1;
+		payload.topic = extra2;
+	}
+
+	const { data, error } = await supabase.from("events").insert(payload).select().single();
+
+	if (error) {
+		toastMsg("Event creation failed");
+		logLine("Event creation error: " + error.message);
+		return;
+	}
+
+	const society = findSocietyById(loggedInOrganizer.id);
+	events.push({
+		...data,
+		society: society?.name || "Unknown",
+		societyShortName: society?.short_name || "",
+		_registrationCount: 0,
+		_reviews: [],
+	});
+
 	addEventForm.reset();
 	updateTypeExtras();
 	searchInput.value = "";
@@ -804,10 +884,10 @@ function addOrganizerEvent() {
 	setActiveSideNav("events");
 	scrollToSection("events");
 	toastMsg("Event added");
-	logLine('Event "' + event.title + '" added successfully!');
+	logLine('Event "' + title + '" added successfully!');
 }
 
-// ─── Scroll Spy ───────────────────────────────────────────────────────────────
+// ─── Scroll Spy ────────────────────────────────────────────────────────────────
 function initScrollSpy() {
 	const sectionTargetMap = {
 		overview: "overview",
@@ -828,7 +908,6 @@ function initScrollSpy() {
 		for (const id of sectionIds) {
 			const section = document.getElementById(id);
 			if (!section) continue;
-
 			if (section.getBoundingClientRect().top <= activationLine) {
 				activeId = id;
 			}
@@ -842,7 +921,7 @@ function initScrollSpy() {
 	updateActiveNavFromScroll();
 }
 
-// ─── Event Bindings ───────────────────────────────────────────────────────────
+// ─── Event Bindings ────────────────────────────────────────────────────────────
 function bind() {
 	searchInput.addEventListener("input", renderEventsTable);
 	typeFilter.addEventListener("change", renderEventsTable);
@@ -854,28 +933,19 @@ function bind() {
 			searchInput.focus();
 			searchInput.select();
 		}
-
 		if (event.key === "Escape") {
 			closeMobileMenu();
 		}
 	});
 
 	if (mobileMenuBtn) {
-		mobileMenuBtn.addEventListener("click", () => {
-			toggleMobileMenu();
-		});
+		mobileMenuBtn.addEventListener("click", toggleMobileMenu);
 	}
-
 	if (mobileMenuBackdrop) {
-		mobileMenuBackdrop.addEventListener("click", () => {
-			closeMobileMenu();
-		});
+		mobileMenuBackdrop.addEventListener("click", closeMobileMenu);
 	}
-
 	window.addEventListener("resize", () => {
-		if (!isMobileDrawerActive()) {
-			closeMobileMenu();
-		}
+		if (!isMobileDrawerActive()) closeMobileMenu();
 	});
 
 	resetFiltersBtn.addEventListener("click", () => {
@@ -891,7 +961,6 @@ function bind() {
 			scrollToSection("events");
 		});
 	}
-
 	if (jumpStudentBtn) {
 		jumpStudentBtn.addEventListener("click", () => {
 			switchTab("student");
@@ -899,7 +968,6 @@ function bind() {
 			scrollToSection("roles");
 		});
 	}
-
 	if (jumpOrganizerBtn) {
 		jumpOrganizerBtn.addEventListener("click", () => {
 			switchTab("organizer");
@@ -907,18 +975,15 @@ function bind() {
 			scrollToSection("roles");
 		});
 	}
-
 	if (switchOrganizerViewBtn) {
 		switchOrganizerViewBtn.addEventListener("click", () => {
 			const enableOrganizerMode = switchOrganizerViewBtn.getAttribute("aria-pressed") !== "true";
 			switchOrganizerViewBtn.setAttribute("aria-pressed", String(enableOrganizerMode));
 			switchOrganizerViewBtn.classList.toggle("is-organizer", enableOrganizerMode);
-
 			const toggleText = switchOrganizerViewBtn.querySelector(".toggle-text");
 			if (toggleText) {
 				toggleText.textContent = enableOrganizerMode ? "Organizer Mode" : "Guest Mode";
 			}
-
 			switchTab(enableOrganizerMode ? "organizer" : "guest");
 			setActiveSideNav("roles");
 			scrollToSection("roles");
@@ -944,7 +1009,6 @@ function bind() {
 			deleteOrganizerEvent(deleteButton.dataset.eventId);
 			return;
 		}
-
 		const openButton = event.target.closest(".open-link");
 		if (!openButton) return;
 		window.open(openButton.dataset.link, "_blank", "noopener");
@@ -958,10 +1022,10 @@ function bind() {
 		});
 	}
 
-	studentRegisterForm.addEventListener("submit", (event) => {
+	studentRegisterForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const fd = new FormData(studentRegisterForm);
-		registerStudentAccount({
+		await registerStudentAccount({
 			name: String(fd.get("name") || "").trim(),
 			cmsId: String(fd.get("cmsId") || "").trim(),
 			email: String(fd.get("email") || "").trim(),
@@ -971,10 +1035,10 @@ function bind() {
 		studentRegisterForm.reset();
 	});
 
-	studentLoginForm.addEventListener("submit", (event) => {
+	studentLoginForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const fd = new FormData(studentLoginForm);
-		loginStudent(String(fd.get("cmsId") || "").trim(), String(fd.get("password") || "").trim());
+		await loginStudent(String(fd.get("cmsId") || "").trim(), String(fd.get("password") || "").trim());
 		studentLoginForm.reset();
 	});
 
@@ -990,10 +1054,10 @@ function bind() {
 		toastMsg("Logged out");
 	});
 
-	organizerLoginForm.addEventListener("submit", (event) => {
+	organizerLoginForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const fd = new FormData(organizerLoginForm);
-		loginOrganizer(organizerSocietySelect.value, String(fd.get("password") || "").trim());
+		await loginOrganizer(organizerSocietySelect.value, String(fd.get("password") || "").trim());
 		organizerLoginForm.reset();
 	});
 
@@ -1006,15 +1070,18 @@ function bind() {
 	});
 
 	newEventType.addEventListener("change", updateTypeExtras);
-	addEventForm.addEventListener("submit", (event) => {
+	addEventForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
-		addOrganizerEvent();
+		await addOrganizerEvent();
 	});
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
-function init() {
-	seedRealEvents();
+// ─── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+	logLine("Connecting to Supabase...");
+	await refreshAllData();
+	logLine("Connected. Loaded " + societies.length + " societies and " + events.length + " events.");
+
 	bind();
 	updateTypeExtras();
 	switchTab("guest");
@@ -1039,7 +1106,6 @@ function init() {
 	updateOrganizerUI();
 	refreshAll();
 	initScrollSpy();
-	logLine("Portal initialized with 4 real upcoming events.");
 }
 
-init();	
+init();
