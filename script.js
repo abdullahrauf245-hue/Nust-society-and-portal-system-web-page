@@ -132,6 +132,70 @@ function formatDate(dateStr) {
 	return d.getDate() + "-" + months[d.getMonth()] + "-" + d.getFullYear();
 }
 
+function normalizeEventTitle(title) {
+	return String(title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getPinnedEventOverride(title) {
+	const key = normalizeEventTitle(title);
+
+	if (key === "nmf" || key.includes("nustmusicfest")) {
+		return {
+			date: "Delayed - Originally 21-23 April 2026",
+			status: "Delayed",
+			venue: "NBS GROUND",
+			descriptionSuffix: "Currently delayed."
+		};
+	}
+
+	if (key.includes("haami")) {
+		return {
+			date: "Delayed - Originally 2-3 April 2026",
+			status: "Delayed",
+			venue: "H12 Campus",
+			descriptionSuffix: "Currently delayed."
+		};
+	}
+
+	if (key.includes("aicon") || key.includes("alcon")) {
+		return {
+			date: "Expected: End of April 2026",
+			status: "Expected",
+			venue: "SEECS"
+		};
+	}
+
+	if (key.includes("vyrothon") || key === "vyro") {
+		return {
+			date: "18 April 2026",
+			status: "Scheduled",
+			venue: "NSTP",
+			registration_link: "",
+			_registrationClosed: true,
+			descriptionSuffix: "Registrations are closed for now."
+		};
+	}
+
+	return null;
+}
+
+function applyPinnedEventOverrides(event) {
+	const override = getPinnedEventOverride(event?.title);
+	if (!override) return event;
+
+	const { descriptionSuffix, ...fields } = override;
+	const updated = { ...event, ...fields };
+
+	if (descriptionSuffix) {
+		const current = String(updated.description || "");
+		if (!current.toLowerCase().includes(descriptionSuffix.toLowerCase())) {
+			updated.description = current ? current + " " + descriptionSuffix : descriptionSuffix;
+		}
+	}
+
+	return updated;
+}
+
 // ─── Supabase Data Loading ─────────────────────────────────────────────────────
 async function loadSocieties() {
 	const { data, error } = await supabase.from("societies").select().order("name");
@@ -163,7 +227,7 @@ async function loadEvents() {
 		...e,
 		society: e.societies?.name || "Unknown",
 		societyShortName: e.societies?.short_name || "",
-	}));
+	})).map((evt) => applyPinnedEventOverrides(evt));
 
 	// Load registration counts and reviews for each event
 	await Promise.all(events.map(async (evt) => {
@@ -208,91 +272,6 @@ function updateTypeExtras() {
 	}
 }
 
-<<<<<<< HEAD
-=======
-function seedRealEvents() {
-	const initial = [
-		{
-			title: "NUST Music Fest (NMF)",
-			type: "concert",
-			society: "NUST Music Society",
-			date: "DELAYED AGAIN - Originally 21-22 April 2026",
-			venue: "NBS GROUND, NUST H-12",
-			capacity: 500,
-			description: "NUST annual music festival. Delayed again.",
-			status: "delayed",
-			registrationUrl: "",
-			details: { performer: "Various Artists", genre: "Live Music / Multi-Genre" }
-		},
-		{
-			title: "HAAMI 2026",
-			type: "concert",
-			society: "RIC",
-			date: "DELAYED - Originally 2-3 April 2026",
-			venue: "NUST Main Campus",
-			capacity: 1000,
-			description: "Fundraiser with Hassan Raheem. Delayed.",
-			status: "delayed",
-			registrationUrl: "",
-			details: { performer: "Hassan Raheem", genre: "Pop / R&B" }
-		},
-		{
-			title: "AIcon 2026",
-			type: "competition",
-			society: "NUST Entrepreneurship Club (NEC)",
-			date: "End of April 2026",
-			venue: "SEECS, NUST",
-			capacity: 150,
-			description: "AI-focused hackathon by NEC, ACM, Hack Club.",
-			status: "expected",
-			registrationUrl: "",
-			details: { prizePool: "TBA", teamSize: 3 }
-		},
-		{
-			title: "VYROTHON 2026",
-			type: "competition",
-			society: "Vyro.ai",
-			date: "18 April 2026",
-			venue: "Vyro Office, NSTP NUST H-12",
-			capacity: 100,
-			description: "In-house hackathon with around $5000 prize pool. Registrations end tonight.",
-			status: "scheduled",
-			registrationUrl: "https://vyrothon.vyro.ai/",
-			details: { prizePool: "~$5,000 USD", teamSize: 3 }
-		}
-	];
-
-	initial.forEach((e) => {
-		const id = createId();
-		const evt = {
-			id,
-			...e,
-			createdBy: e.society,
-			registeredCmsIds: [],
-			reviews: []
-		};
-		events.push(evt);
-		const host = bySociety(e.society);
-		if (host) {
-			host.eventIds.push(id);
-		}
-	});
-}
-
-function filteredEvents() {
-	const q = searchInput.value.trim().toLowerCase();
-	const t = typeFilter.value;
-	const s = societyFilter.value;
-
-	return events.filter((e) => {
-		const qOk = !q || e.title.toLowerCase().includes(q) || e.society.toLowerCase().includes(q) || e.type.includes(q);
-		const tOk = t === "all" || e.type === t;
-		const sOk = s === "all" || e.society === s;
-		return qOk && tOk && sOk;
-	});
-}
-
->>>>>>> 7281be3 (Changing the dates)
 function renderFilters() {
 	const prev = societyFilter.value;
 	const names = [...new Set(events.map((e) => e.society))].sort();
@@ -606,6 +585,11 @@ async function registerForEvent() {
 		toastMsg("Invalid event selection");
 		return;
 	}
+	if (event._registrationClosed) {
+		toastMsg("Registration is closed");
+		logLine("Registrations for " + event.title + " are closed for now.");
+		return;
+	}
 	if (availableSeats(event) <= 0) {
 		toastMsg("Event is full");
 		logLine("Sorry, " + event.title + " is full.");
@@ -783,7 +767,8 @@ async function showUpcoming() {
 
 	const lines = ["Your Upcoming Events:"];
 	data.forEach((r) => {
-		const evt = r.events;
+		if (!r.events) return;
+		const evt = applyPinnedEventOverrides(r.events);
 		if (evt) {
 			lines.push("  - " + evt.title + " | " + formatDate(evt.date) + " | " + evt.venue);
 		}
@@ -812,7 +797,10 @@ async function showMyEvents() {
 	}
 
 	const lines = ["Events by " + loggedInOrganizer.name + ":"];
-	data.forEach((e, i) => lines.push("  " + (i + 1) + ". " + e.title + " | " + formatDate(e.date)));
+	data.forEach((raw, i) => {
+		const e = applyPinnedEventOverrides(raw);
+		lines.push("  " + (i + 1) + ". " + e.title + " | " + formatDate(e.date));
+	});
 	logLine(lines.join("\n"));
 }
 
@@ -1193,4 +1181,4 @@ async function init() {
 	initScrollSpy();
 }
 
-init();
+init()
