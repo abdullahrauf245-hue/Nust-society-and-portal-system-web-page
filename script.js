@@ -126,10 +126,22 @@ function toastMsg(message) {
 
 function formatDate(dateStr) {
 	if (!dateStr) return "TBA";
-	const d = new Date(dateStr);
-	if (isNaN(d)) return dateStr;
+	const raw = String(dateStr).trim();
+	if (!raw) return "TBA";
+
+	// Parse only ISO-like values from DB (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss).
+	// Human-readable labels like "Delayed - Originally ..." should be shown as-is.
+	const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+	if (!isoMatch) return raw;
+
+	const year = Number(isoMatch[1]);
+	const month = Number(isoMatch[2]);
+	const day = Number(isoMatch[3]);
+	const d = new Date(Date.UTC(year, month - 1, day));
+	if (isNaN(d.getTime())) return raw;
+
 	const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	return d.getDate() + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+	return d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
 }
 
 function normalizeEventTitle(title) {
