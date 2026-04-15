@@ -58,10 +58,10 @@ Every action prints a timestamped log line to the on-screen console panel.
 
 | Event | Society | Type | Status |
 |---|---|---|---|
-| NUST Music Fest (NMF) | NUST Music Society | Concert | Delayed — orig. 21-22 Apr 2026 |
-| HAAMI 2026 | RIC | Concert | Delayed — orig. 2-3 Apr 2026 |
-| AIcon 2026 | NEC | Competition | Expected end of April 2026 |
-| VYROTHON 2026 | Vyro.ai | Competition | 18-Apr-2026 — [Register here](https://vyrothon.vyro.ai/) |
+| NUST Music Fest (NMF) | NUST Music Society | Concert | Delayed again — orig. 21-22 April 2026 |
+| HAAMI 2026 | RIC | Concert | Delayed — orig. 2-3 April 2026 |
+| AIcon 2026 | NEC | Competition | End of April 2026 |
+| VYROTHON 2026 | Vyro.ai | Competition | 18 April 2026 — registrations end tonight — [Register here](https://vyrothon.vyro.ai/) |
 
 ---
 

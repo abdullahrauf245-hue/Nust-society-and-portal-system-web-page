@@ -208,6 +208,91 @@ function updateTypeExtras() {
 	}
 }
 
+<<<<<<< HEAD
+=======
+function seedRealEvents() {
+	const initial = [
+		{
+			title: "NUST Music Fest (NMF)",
+			type: "concert",
+			society: "NUST Music Society",
+			date: "DELAYED AGAIN - Originally 21-22 April 2026",
+			venue: "NBS GROUND, NUST H-12",
+			capacity: 500,
+			description: "NUST annual music festival. Delayed again.",
+			status: "delayed",
+			registrationUrl: "",
+			details: { performer: "Various Artists", genre: "Live Music / Multi-Genre" }
+		},
+		{
+			title: "HAAMI 2026",
+			type: "concert",
+			society: "RIC",
+			date: "DELAYED - Originally 2-3 April 2026",
+			venue: "NUST Main Campus",
+			capacity: 1000,
+			description: "Fundraiser with Hassan Raheem. Delayed.",
+			status: "delayed",
+			registrationUrl: "",
+			details: { performer: "Hassan Raheem", genre: "Pop / R&B" }
+		},
+		{
+			title: "AIcon 2026",
+			type: "competition",
+			society: "NUST Entrepreneurship Club (NEC)",
+			date: "End of April 2026",
+			venue: "SEECS, NUST",
+			capacity: 150,
+			description: "AI-focused hackathon by NEC, ACM, Hack Club.",
+			status: "expected",
+			registrationUrl: "",
+			details: { prizePool: "TBA", teamSize: 3 }
+		},
+		{
+			title: "VYROTHON 2026",
+			type: "competition",
+			society: "Vyro.ai",
+			date: "18 April 2026",
+			venue: "Vyro Office, NSTP NUST H-12",
+			capacity: 100,
+			description: "In-house hackathon with around $5000 prize pool. Registrations end tonight.",
+			status: "scheduled",
+			registrationUrl: "https://vyrothon.vyro.ai/",
+			details: { prizePool: "~$5,000 USD", teamSize: 3 }
+		}
+	];
+
+	initial.forEach((e) => {
+		const id = createId();
+		const evt = {
+			id,
+			...e,
+			createdBy: e.society,
+			registeredCmsIds: [],
+			reviews: []
+		};
+		events.push(evt);
+		const host = bySociety(e.society);
+		if (host) {
+			host.eventIds.push(id);
+		}
+	});
+}
+
+function filteredEvents() {
+	const q = searchInput.value.trim().toLowerCase();
+	const t = typeFilter.value;
+	const s = societyFilter.value;
+
+	return events.filter((e) => {
+		const qOk = !q || e.title.toLowerCase().includes(q) || e.society.toLowerCase().includes(q) || e.type.includes(q);
+		const tOk = t === "all" || e.type === t;
+		const sOk = s === "all" || e.society === s;
+		return qOk && tOk && sOk;
+	});
+}
+
+>>>>>>> 7281be3 (Changing the dates)
 function renderFilters() {
 	const prev = societyFilter.value;
 	const names = [...new Set(events.map((e) => e.society))].sort();
