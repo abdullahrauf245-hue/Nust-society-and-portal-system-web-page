@@ -5,6 +5,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
+const THEME_STORAGE_KEY = "nust-portal-theme";
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 let societies = [];
@@ -29,6 +30,7 @@ const refreshFeaturedBtn = document.getElementById("refreshFeaturedBtn");
 const jumpStudentBtn = document.getElementById("jumpStudentBtn");
 const jumpOrganizerBtn = document.getElementById("jumpOrganizerBtn");
 const switchOrganizerViewBtn = document.getElementById("switchOrganizerViewBtn");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
 const sideNavLinks = document.querySelectorAll(".side-nav-link");
 const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
@@ -79,6 +81,60 @@ function closeMobileMenu() {
 function toggleMobileMenu() {
 	const currentlyOpen = document.body.classList.contains("mobile-menu-open");
 	setMobileMenuState(!currentlyOpen);
+}
+
+function getStoredTheme() {
+	try {
+		const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+		if (savedTheme === "light" || savedTheme === "dark") {
+			return savedTheme;
+		}
+	} catch {
+		return null;
+	}
+	return null;
+}
+
+function getPreferredTheme() {
+	const storedTheme = getStoredTheme();
+	if (storedTheme) return storedTheme;
+	const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+	return prefersLight ? "light" : "dark";
+}
+
+function updateThemeToggleUI(theme) {
+	if (!themeToggleBtn) return;
+	const isLight = theme === "light";
+	themeToggleBtn.setAttribute("aria-pressed", String(isLight));
+	themeToggleBtn.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+	const label = themeToggleBtn.querySelector(".theme-toggle-label");
+	if (label) {
+		label.textContent = isLight ? "Light Mode" : "Dark Mode";
+	}
+}
+
+function applyTheme(theme, persist = true) {
+	const safeTheme = theme === "light" ? "light" : "dark";
+	document.documentElement.setAttribute("data-theme", safeTheme);
+	document.documentElement.style.colorScheme = safeTheme;
+	updateThemeToggleUI(safeTheme);
+
+	if (!persist) return;
+	try {
+		localStorage.setItem(THEME_STORAGE_KEY, safeTheme);
+	} catch {
+		// Ignore storage write errors and still apply the theme for this session.
+	}
+}
+
+function initThemeToggle() {
+	applyTheme(getPreferredTheme(), false);
+	if (!themeToggleBtn) return;
+
+	themeToggleBtn.addEventListener("click", () => {
+		const currentTheme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+		applyTheme(currentTheme === "light" ? "dark" : "light");
+	});
 }
 
 function findSocietyById(id) {
@@ -1163,6 +1219,7 @@ function bind() {
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
+	initThemeToggle();
 	logLine("Connecting to Supabase...");
 	await refreshAllData();
 	logLine("Connected. Loaded " + societies.length + " societies and " + events.length + " events.");
