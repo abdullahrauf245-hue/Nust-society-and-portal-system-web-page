@@ -6,11 +6,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
 const THEME_STORAGE_KEY = "nust-portal-theme";
+const DATA_MODE_REMOTE = "remote";
+const DATA_MODE_LOCAL = "local";
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 let societies = [];
 let events = [];
 let students = [];
+let dataMode = DATA_MODE_REMOTE;
+let localState = null;
 let loggedInStudent = null;
 let loggedInOrganizer = null;
 let toastTimer = null;
@@ -180,6 +184,15 @@ function toastMsg(message) {
 	}, 2000);
 }
 
+function isFetchNetworkError(error) {
+	const msg = String(error?.message || "").toLowerCase();
+	return msg.includes("failed to fetch") || msg.includes("load failed") || msg.includes("networkerror");
+}
+
+function logSupabaseNetworkHint() {
+	logLine("Cannot reach Supabase host. Check SUPABASE_URL, internet, DNS, or firewall settings.");
+}
+
 function formatDate(dateStr) {
 	if (!dateStr) return "TBA";
 	const raw = String(dateStr).trim();
@@ -264,17 +277,159 @@ function applyPinnedEventOverrides(event) {
 	return updated;
 }
 
+function createLocalState() {
+	return {
+		societies: [
+			{ id: "soc-001", name: "NUST Music Society", short_name: "NMS", password_hash: "nms123" },
+			{ id: "soc-002", name: "RIC", short_name: "RIC", password_hash: "ric123" },
+			{ id: "soc-003", name: "NEC", short_name: "NEC", password_hash: "nec123" },
+			{ id: "soc-004", name: "ACM", short_name: "ACM", password_hash: "acm123" },
+			{ id: "soc-005", name: "Vyro.ai", short_name: "VYRO", password_hash: "vyro123" },
+			{ id: "soc-006", name: "IEEE", short_name: "IEEE", password_hash: "ieee123" },
+			{ id: "soc-007", name: "SOULS", short_name: "SOULS", password_hash: "souls123" },
+			{ id: "soc-008", name: "AND", short_name: "AND", password_hash: "and123" }
+		],
+		events: [
+			{
+				id: "evt-0001",
+				title: "NUST Music Fest (NMF)",
+				society_id: "soc-001",
+				type: "concert",
+				date: "2026-04-22",
+				venue: "NBS Ground",
+				seats: 350,
+				description: "Flagship live music event.",
+				status: "Scheduled",
+				registration_link: null
+			},
+			{
+				id: "evt-0002",
+				title: "HAAMI 2026",
+				society_id: "soc-002",
+				type: "concert",
+				date: "2026-04-03",
+				venue: "H12 Campus",
+				seats: 250,
+				description: "Culture and community evening.",
+				status: "Scheduled",
+				registration_link: null
+			},
+			{
+				id: "evt-0003",
+				title: "AIcon 2026",
+				society_id: "soc-003",
+				type: "competition",
+				date: "2026-04-30",
+				venue: "SEECS",
+				seats: 180,
+				description: "AI and innovation challenge.",
+				status: "Expected",
+				registration_link: null
+			},
+			{
+				id: "evt-0004",
+				title: "VYROTHON 2026",
+				society_id: "soc-005",
+				type: "competition",
+				date: "2026-04-18",
+				venue: "NSTP",
+				seats: 120,
+				description: "Build and pitch AI products.",
+				status: "Scheduled",
+				registration_link: "https://vyrothon.vyro.ai/"
+			}
+		],
+		students: [],
+		registrations: [],
+		reviews: [],
+		eventCounter: 5,
+		studentCounter: 1,
+		reviewCounter: 1,
+		registrationCounter: 1
+	};
+}
+
+function isLocalMode() {
+	return dataMode === DATA_MODE_LOCAL;
+}
+
+function toLocalId(prefix, num) {
+	return prefix + "-" + String(num).padStart(4, "0");
+}
+
+function nextLocalEventId() {
+	const id = toLocalId("evt", localState.eventCounter);
+	localState.eventCounter += 1;
+	return id;
+}
+
+function nextLocalStudentId() {
+	const id = toLocalId("stu", localState.studentCounter);
+	localState.studentCounter += 1;
+	return id;
+}
+
+function nextLocalReviewId() {
+	const id = toLocalId("rev", localState.reviewCounter);
+	localState.reviewCounter += 1;
+	return id;
+}
+
+function nextLocalRegistrationId() {
+	const id = toLocalId("reg", localState.registrationCounter);
+	localState.registrationCounter += 1;
+	return id;
+}
+
+function syncLocalDerivedData() {
+	if (!localState) return;
+
+	societies = localState.societies;
+	students = localState.students;
+	events = localState.events.map((event) => {
+		const regCount = localState.registrations.filter((r) => r.event_id === event.id && r.status === "active").length;
+		const eventReviews = localState.reviews.filter((r) => r.event_id === event.id);
+		const society = localState.societies.find((s) => s.id === event.society_id);
+
+		return applyPinnedEventOverrides({
+			...event,
+			society: society?.name || "Unknown",
+			societyShortName: society?.short_name || "",
+			_registrationCount: regCount,
+			_reviews: eventReviews
+		});
+	});
+}
+
+function setLocalMode() {
+	if (!localState) localState = createLocalState();
+	dataMode = DATA_MODE_LOCAL;
+	syncLocalDerivedData();
+}
+
 // ─── Supabase Data Loading ─────────────────────────────────────────────────────
 async function loadSocieties() {
+	if (isLocalMode()) {
+		syncLocalDerivedData();
+		return true;
+	}
+
 	const { data, error } = await supabase.from("societies").select().order("name");
 	if (error) {
 		logLine("Error loading societies: " + error.message);
-		return;
+		if (isFetchNetworkError(error)) logSupabaseNetworkHint();
+		return false;
 	}
 	societies = data || [];
+	return true;
 }
 
 async function loadEvents() {
+	if (isLocalMode()) {
+		syncLocalDerivedData();
+		return true;
+	}
+
 	const { data, error } = await supabase
 		.from("events")
 		.select(`
@@ -288,7 +443,8 @@ async function loadEvents() {
 
 	if (error) {
 		logLine("Error loading events: " + error.message);
-		return;
+		if (isFetchNetworkError(error)) logSupabaseNetworkHint();
+		return false;
 	}
 
 	events = (data || []).map((e) => ({
@@ -312,11 +468,20 @@ async function loadEvents() {
 			.eq("event_id", evt.id);
 		evt._reviews = reviews || [];
 	}));
+
+	return true;
 }
 
 async function refreshAllData() {
-	await Promise.all([loadSocieties(), loadEvents()]);
+	if (isLocalMode()) {
+		syncLocalDerivedData();
+		refreshAll();
+		return true;
+	}
+
+	const results = await Promise.all([loadSocieties(), loadEvents()]);
 	refreshAll();
+	return results.every(Boolean);
 }
 
 // ─── Rendering ─────────────────────────────────────────────────────────────────
@@ -1221,8 +1386,12 @@ function bind() {
 async function init() {
 	initThemeToggle();
 	logLine("Connecting to Supabase...");
-	await refreshAllData();
-	logLine("Connected. Loaded " + societies.length + " societies and " + events.length + " events.");
+	const isConnected = await refreshAllData();
+	if (isConnected) {
+		logLine("Connected. Loaded " + societies.length + " societies and " + events.length + " events.");
+	} else {
+		logLine("Backend connection failed. Working with empty local state.");
+	}
 
 	bind();
 	updateTypeExtras();
