@@ -1270,16 +1270,34 @@ tbody tr:hover {
 	background: rgba(251, 113, 133, 0.14);
 }
 
+:root[data-theme="light"] .status-delayed {
+	color: #b91c1c;
+	border-color: rgba(225, 29, 72, 0.4);
+	background: rgba(225, 29, 72, 0.12);
+}
+
 .status-expected {
 	color: #fde68a;
 	border-color: rgba(245, 158, 11, 0.4);
 	background: rgba(245, 158, 11, 0.14);
 }
 
+:root[data-theme="light"] .status-expected {
+	color: #b45309;
+	border-color: rgba(217, 119, 6, 0.4);
+	background: rgba(217, 119, 6, 0.12);
+}
+
 .status-scheduled {
 	color: #bbf7d0;
 	border-color: rgba(52, 211, 153, 0.4);
 	background: rgba(16, 185, 129, 0.14);
+}
+
+:root[data-theme="light"] .status-scheduled {
+	color: #047857;
+	border-color: rgba(5, 150, 105, 0.4);
+	background: rgba(5, 150, 105, 0.12);
 }
 
 .open-link,
