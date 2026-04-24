@@ -1468,12 +1468,16 @@ function initScrollReveal() {
 // ─── Animation: Side Nav Ripple Tracking ───────────────────────────────────────
 function initSideNavRipple() {
 	document.querySelectorAll(".side-nav-link").forEach((link) => {
+		let rafId;
 		link.addEventListener("mousemove", (e) => {
-			const rect = link.getBoundingClientRect();
-			const x = ((e.clientX - rect.left) / rect.width) * 100;
-			const y = ((e.clientY - rect.top) / rect.height) * 100;
-			link.style.setProperty("--ripple-x", x + "%");
-			link.style.setProperty("--ripple-y", y + "%");
+			if (rafId) cancelAnimationFrame(rafId);
+			rafId = requestAnimationFrame(() => {
+				const rect = link.getBoundingClientRect();
+				const x = ((e.clientX - rect.left) / rect.width) * 100;
+				const y = ((e.clientY - rect.top) / rect.height) * 100;
+				link.style.setProperty("--ripple-x", x + "%");
+				link.style.setProperty("--ripple-y", y + "%");
+			});
 		});
 	});
 }

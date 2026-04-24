@@ -1613,6 +1613,7 @@ body::after {
 /* ── Side Nav Link Ripple ───────────────────────────────────────────────────── */
 .side-nav-link {
 	overflow: hidden;
+	position: relative;
 }
 
 .side-nav-link::after {
@@ -1620,10 +1621,13 @@ body::after {
 	position: absolute;
 	inset: 0;
 	background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
-		rgba(129, 140, 248, 0.2), transparent 60%);
+		rgba(167, 139, 250, 0.45) 0%, 
+		rgba(129, 140, 248, 0.15) 30%, 
+		transparent 60%);
 	opacity: 0;
-	transition: opacity 300ms ease;
+	transition: opacity 200ms ease;
 	pointer-events: none;
+	mix-blend-mode: screen;
 }
 
 .side-nav-link:hover::after {
