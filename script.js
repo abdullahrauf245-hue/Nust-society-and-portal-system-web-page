@@ -1420,6 +1420,8 @@ async function init() {
 	initScrollReveal();
 	initSideNavRipple();
 	initCountUpObserver();
+	initScrollProgress();
+	initCardTilt();
 }
 
 // ─── Animation: Scroll Reveal ──────────────────────────────────────────────────
@@ -1522,6 +1524,58 @@ function initCountUpObserver() {
 	);
 
 	widgetValues.forEach((el) => observer.observe(el));
+}
+
+// ─── Animation: Scroll Progress Bar ────────────────────────────────────────────
+function initScrollProgress() {
+	const progressBar = document.getElementById("scrollProgress");
+	if (!progressBar) return;
+
+	window.addEventListener("scroll", () => {
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+		const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+		progressBar.style.width = progress + "%";
+	}, { passive: true });
+}
+
+// ─── Animation: 3D Tilt Effect on Cards ────────────────────────────────────────
+function initCardTilt() {
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	if (prefersReducedMotion) return;
+
+	document.addEventListener("mousemove", (e) => {
+		const card = e.target.closest(".event-card");
+		if (!card) {
+			// Clear transform for any card we just left (fallback if mouseout missed)
+			document.querySelectorAll(".event-card.is-tilting").forEach(c => {
+				c.classList.remove("is-tilting");
+				c.style.transform = "";
+			});
+			return;
+		}
+
+		const rect = card.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+
+		const centerX = rect.width / 2;
+		const centerY = rect.height / 2;
+
+		const rotateX = ((y - centerY) / centerY) * -6;
+		const rotateY = ((x - centerX) / centerX) * 6;
+
+		card.classList.add("is-tilting");
+		card.style.transform = "perspective(1200px) rotateX(" + rotateX + "deg) rotateY(" + rotateY + "deg) scale3d(1.02, 1.02, 1.02)";
+	}, { passive: true });
+
+	document.addEventListener("mouseout", (e) => {
+		const card = e.target.closest(".event-card");
+		if (card && (!e.relatedTarget || !card.contains(e.relatedTarget))) {
+			card.classList.remove("is-tilting");
+			card.style.transform = "";
+		}
+	});
 }
 
 init()
