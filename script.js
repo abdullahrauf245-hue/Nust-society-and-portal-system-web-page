@@ -1527,55 +1527,241 @@ function initCountUpObserver() {
 }
 
 // ─── Animation: Scroll Progress Bar ────────────────────────────────────────────
-function initScrollProgress() {
-	const progressBar = document.getElementById("scrollProgress");
-	if (!progressBar) return;
+function initScrollProgressBar() {
+	const bar = document.createElement("div");
+	bar.id = "scrollProgressBar";
+	document.body.prepend(bar);
 
-	window.addEventListener("scroll", () => {
+	function updateBar() {
 		const scrollTop = window.scrollY || document.documentElement.scrollTop;
-		const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-		const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-		progressBar.style.width = progress + "%";
-	}, { passive: true });
+		const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+		const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+		bar.style.width = pct.toFixed(2) + "%";
+	}
+
+	window.addEventListener("scroll", updateBar, { passive: true });
+	updateBar();
 }
 
-// ─── Animation: 3D Tilt Effect on Cards ────────────────────────────────────────
-function initCardTilt() {
-	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-	if (prefersReducedMotion) return;
+// ─── Animation: Cursor Glow Orb ────────────────────────────────────────────────
+function initCursorGlow() {
+	if (window.matchMedia("(hover: none)").matches) return;
+	if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-	document.addEventListener("mousemove", (e) => {
-		const card = e.target.closest(".event-card");
-		if (!card) {
-			// Clear transform for any card we just left (fallback if mouseout missed)
-			document.querySelectorAll(".event-card.is-tilting").forEach(c => {
-				c.classList.remove("is-tilting");
-				c.style.transform = "";
-			});
-			return;
+	const orb = document.createElement("div");
+	orb.id = "cursorGlow";
+	document.body.appendChild(orb);
+
+	let mouseX = -999, mouseY = -999;
+	let orbX = -999, orbY = -999;
+	let rafId = null;
+
+	window.addEventListener("mousemove", (e) => {
+		mouseX = e.clientX;
+		mouseY = e.clientY;
+		if (!rafId) {
+			rafId = requestAnimationFrame(moveOrb);
 		}
-
-		const rect = card.getBoundingClientRect();
-		const x = e.clientX - rect.left;
-		const y = e.clientY - rect.top;
-
-		const centerX = rect.width / 2;
-		const centerY = rect.height / 2;
-
-		const rotateX = ((y - centerY) / centerY) * -6;
-		const rotateY = ((x - centerX) / centerX) * 6;
-
-		card.classList.add("is-tilting");
-		card.style.transform = "perspective(1200px) rotateX(" + rotateX + "deg) rotateY(" + rotateY + "deg) scale3d(1.02, 1.02, 1.02)";
 	}, { passive: true });
 
-	document.addEventListener("mouseout", (e) => {
-		const card = e.target.closest(".event-card");
-		if (card && (!e.relatedTarget || !card.contains(e.relatedTarget))) {
-			card.classList.remove("is-tilting");
-			card.style.transform = "";
+	function moveOrb() {
+		rafId = null;
+		orbX += (mouseX - orbX) * 0.10;
+		orbY += (mouseY - orbY) * 0.10;
+		orb.style.left = orbX + "px";
+		orb.style.top = orbY + "px";
+		if (Math.abs(mouseX - orbX) > 0.5 || Math.abs(mouseY - orbY) > 0.5) {
+			rafId = requestAnimationFrame(moveOrb);
 		}
+	}
+}
+
+// ─── Animation: Button Click Ripple/Shockwave ──────────────────────────────────
+function initButtonRipple() {
+	document.addEventListener("click", (e) => {
+		const btn = e.target.closest("button");
+		if (!btn) return;
+
+		const rect = btn.getBoundingClientRect();
+		const size = Math.max(rect.width, rect.height) * 1.8;
+		const x = e.clientX - rect.left - size / 2;
+		const y = e.clientY - rect.top - size / 2;
+
+		const ripple = document.createElement("span");
+		ripple.className = "btn-ripple-wave";
+		ripple.style.cssText = "width:" + size + "px;height:" + size + "px;left:" + x + "px;top:" + y + "px;";
+		btn.appendChild(ripple);
+		ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
 	});
 }
 
-init()
+// ─── Animation: Enhanced 3D Card Tilt with Shine ──────────────────────────────
+function initEnhancedCardTilt() {
+	if (window.matchMedia("(hover: none)").matches) return;
+	if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+	function attachTilt(card) {
+		if (card.dataset.tiltV2) return;
+		card.dataset.tiltV2 = "1";
+
+		let shine = card.querySelector(".card-tilt-shine");
+		if (!shine) {
+			shine = document.createElement("div");
+			shine.className = "card-tilt-shine";
+			card.appendChild(shine);
+		}
+
+		card.addEventListener("mousemove", (e) => {
+			const rect = card.getBoundingClientRect();
+			const cx = rect.left + rect.width / 2;
+			const cy = rect.top + rect.height / 2;
+			const dx = (e.clientX - cx) / (rect.width / 2);
+			const dy = (e.clientY - cy) / (rect.height / 2);
+			const rotX = -dy * 7;
+			const rotY = dx * 7;
+			const shineX = ((e.clientX - rect.left) / rect.width) * 100;
+			const shineY = ((e.clientY - rect.top) / rect.height) * 100;
+			card.style.transform = "perspective(900px) rotateX(" + rotX + "deg) rotateY(" + rotY + "deg) scale3d(1.025, 1.025, 1.025)";
+			card.style.setProperty("--shine-x", shineX + "%");
+			card.style.setProperty("--shine-y", shineY + "%");
+		});
+
+		card.addEventListener("mouseleave", () => {
+			card.style.transform = "";
+		});
+	}
+
+	const cardObserver = new MutationObserver(() => {
+		document.querySelectorAll(".event-card:not([data-tilt-v2])").forEach(attachTilt);
+	});
+	cardObserver.observe(document.body, { childList: true, subtree: true });
+	document.querySelectorAll(".event-card").forEach(attachTilt);
+}
+
+// ─── Animation: Glitch Brand on Hover + Auto ──────────────────────────────────
+function initGlitchBrand() {
+	const brandMark = document.querySelector(".brand-mark");
+	if (!brandMark) return;
+
+	let glitchTimer = null;
+	function triggerGlitch() {
+		brandMark.classList.add("glitch-active");
+		clearTimeout(glitchTimer);
+		glitchTimer = setTimeout(() => brandMark.classList.remove("glitch-active"), 400);
+	}
+
+	brandMark.addEventListener("mouseenter", triggerGlitch);
+	setInterval(triggerGlitch, 12000);
+}
+
+// ─── Animation: Mini-Card Mouse Glow Tracking ─────────────────────────────────
+function initMiniCardGlow() {
+	if (window.matchMedia("(hover: none)").matches) return;
+
+	document.querySelectorAll(".mini-card").forEach((card) => {
+		card.addEventListener("mousemove", (e) => {
+			const rect = card.getBoundingClientRect();
+			const x = ((e.clientX - rect.left) / rect.width) * 100;
+			const y = ((e.clientY - rect.top) / rect.height) * 100;
+			card.style.setProperty("--card-mx", x + "%");
+			card.style.setProperty("--card-my", y + "%");
+		});
+	});
+}
+
+// ─── Animation: Widget Particle Sparks (dynamic) ──────────────────────────────
+function spawnParticlesOnWidget(widget) {
+	if (widget.dataset.particles) return;
+	if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+	widget.dataset.particles = "1";
+
+	const colors = [
+		"rgba(129, 140, 248, 0.8)",
+		"rgba(167, 139, 250, 0.8)",
+		"rgba(56, 189, 248, 0.8)",
+		"rgba(52, 211, 153, 0.7)",
+		"rgba(251, 191, 36, 0.7)"
+	];
+
+	for (let i = 0; i < 6; i++) {
+		const p = document.createElement("div");
+		p.className = "widget-particle";
+		const sz = 2 + Math.random() * 3;
+		const color = colors[i % colors.length];
+		const dur = 2.5 + Math.random() * 2.5;
+		const delay = Math.random() * 5;
+		const sx = 5 + Math.random() * 90;
+		const sy = 55 + Math.random() * 35;
+		const tx1 = (Math.random() - 0.5) * 40;
+		const ty1 = -(8 + Math.random() * 18);
+		const tx2 = tx1 + (Math.random() - 0.5) * 20;
+		const ty2 = ty1 - (12 + Math.random() * 22);
+		const tx3 = tx2 + (Math.random() - 0.5) * 12;
+		const ty3 = ty2 - (10 + Math.random() * 18);
+
+		p.style.cssText = [
+			"width:" + sz + "px", "height:" + sz + "px",
+			"background:" + color,
+			"left:" + sx + "%", "top:" + sy + "%",
+			"box-shadow:0 0 " + (sz * 3) + "px " + color,
+			"--p-dur:" + dur + "s", "--p-delay:" + delay + "s",
+			"--p-tx1:" + tx1 + "px", "--p-ty1:" + ty1 + "px",
+			"--p-tx2:" + tx2 + "px", "--p-ty2:" + ty2 + "px",
+			"--p-tx3:" + tx3 + "px", "--p-ty3:" + ty3 + "px"
+		].join(";");
+
+		widget.appendChild(p);
+	}
+}
+
+function initWidgetParticles() {
+	const statsGrid = document.getElementById("statsGrid");
+	if (!statsGrid) return;
+
+	const obs = new MutationObserver(() => {
+		statsGrid.querySelectorAll(".mini-widget").forEach(spawnParticlesOnWidget);
+	});
+	obs.observe(statsGrid, { childList: true, subtree: true });
+	statsGrid.querySelectorAll(".mini-widget").forEach(spawnParticlesOnWidget);
+}
+
+// ─── Animation: Typewriter Hero Subtitle ──────────────────────────────────────
+function initTypewriterHero() {
+	const subEl = document.querySelector(".topbar .sub");
+	if (!subEl) return;
+	if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+	const fullText = subEl.textContent.trim();
+	subEl.textContent = "";
+
+	const cursor = document.createElement("span");
+	cursor.className = "typewriter-cursor";
+	subEl.appendChild(cursor);
+
+	let i = 0;
+	function typeNext() {
+		if (i < fullText.length) {
+			subEl.insertBefore(document.createTextNode(fullText[i]), cursor);
+			i++;
+			setTimeout(typeNext, 25 + Math.random() * 22);
+		}
+	}
+	setTimeout(typeNext, 800);
+}
+
+// ─── Animation: 3D Card Tilt (old function kept for compatibility) ─────────────
+function initCardTilt() {
+	// Replaced by initEnhancedCardTilt — this is a no-op to avoid conflicts
+}
+
+init();
+
+// ─── Boot all animation systems ────────────────────────────────────────────────
+initScrollProgressBar();
+initCursorGlow();
+initButtonRipple();
+initEnhancedCardTilt();
+initGlitchBrand();
+initMiniCardGlow();
+initWidgetParticles();
+initTypewriterHero();
