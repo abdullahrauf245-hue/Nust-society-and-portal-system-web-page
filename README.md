@@ -2,6 +2,9 @@
 
 # NUST Events & Society Portal — Web Frontend
 
+ Deployed that on Vercel link is
+
+**[NUST Events & Society Portal](https://nust-pulse.vercel.app/)**
 A browser-based companion to the Java OOP terminal project. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no dependencies.
 
 ---
