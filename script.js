@@ -1443,10 +1443,24 @@ function initScrollReveal() {
 				}
 			});
 		},
-		{ threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+		{ threshold: 0.08, rootMargin: "20px 0px -20px 0px" }
 	);
 
-	revealElements.forEach((el) => observer.observe(el));
+	// Use rAF to ensure the DOM has painted before observing
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			revealElements.forEach((el) => observer.observe(el));
+		});
+	});
+
+	// Safety net: if any element is still hidden after 1.5s, force-reveal it
+	setTimeout(() => {
+		revealElements.forEach((el) => {
+			if (!el.classList.contains("is-visible")) {
+				el.classList.add("is-visible");
+			}
+		});
+	}, 1500);
 }
 
 // ─── Animation: Side Nav Ripple Tracking ───────────────────────────────────────
