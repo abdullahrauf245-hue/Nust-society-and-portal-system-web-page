@@ -143,9 +143,9 @@ button {
 }
 
 button:hover {
-	transform: translateY(-1px);
-	box-shadow: 0 16px 30px rgba(79, 70, 229, 0.32);
-	filter: brightness(1.03);
+	transform: translateY(-2px);
+	box-shadow: 0 16px 30px rgba(79, 70, 229, 0.32), inset 0 0 15px rgba(255, 255, 255, 0.2);
+	filter: brightness(1.05);
 }
 
 button:active {
@@ -989,7 +989,9 @@ svg {
 	border: 1px solid var(--line);
 	background: linear-gradient(180deg, rgba(15, 23, 42, 0.48), rgba(15, 23, 42, 0.3));
 	box-shadow: var(--shadow-soft);
-	transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+	transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms ease, border-color 150ms ease;
+	transform-style: preserve-3d;
+	perspective: 1200px;
 }
 
 .event-card::before {
@@ -1006,9 +1008,13 @@ svg {
 }
 
 .event-card:hover {
-	transform: translateY(-4px) scale(1.02);
+	transform: translateY(-6px) scale(1.02);
 	border-color: rgba(129, 140, 248, 0.62);
-	box-shadow: 0 28px 52px rgba(67, 56, 202, 0.28);
+	box-shadow: 0 28px 52px rgba(67, 56, 202, 0.35);
+}
+
+.event-card.is-tilting {
+	transition: box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .event-card:hover::before {
@@ -1376,6 +1382,20 @@ tbody tr:hover {
 /* ═══════════════════════════════════════════════════════════════════════════════
    ANIMATION SYSTEM
    ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scroll Progress Bar ────────────────────────────────────────────────────── */
+.scroll-progress {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 4px;
+	background: linear-gradient(90deg, var(--accent), var(--accent-alt), #38bdf8);
+	width: 0%;
+	z-index: 1000;
+	transition: width 0.1s ease-out;
+	box-shadow: 0 0 12px rgba(129, 140, 248, 0.9);
+	border-radius: 0 2px 2px 0;
+}
 
 /* ── Scroll-Reveal Entrance ─────────────────────────────────────────────────── */
 .reveal {
@@ -2538,6 +2558,382 @@ tbody tr:nth-child(6) { animation-delay: 0.24s; }
 		grid-template-columns: 1fr;
 		gap: 4px;
 		align-items: start;
+	}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NEXT-LEVEL ANIMATIONS v2
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scroll Progress Bar ────────────────────────────────────────────────────── */
+#scrollProgressBar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 3px;
+	width: 0%;
+	background: linear-gradient(90deg, var(--accent), var(--accent-alt), #38bdf8, var(--accent));
+	background-size: 300% 100%;
+	z-index: 9999;
+	border-radius: 0 999px 999px 0;
+	box-shadow: 0 0 12px rgba(129, 140, 248, 0.8), 0 0 24px rgba(129, 140, 248, 0.4);
+	transition: width 80ms linear;
+	animation: progressGradient 3s linear infinite;
+}
+
+@keyframes progressGradient {
+	0% { background-position: 0% 50%; }
+	100% { background-position: 300% 50%; }
+}
+
+/* ── Cursor Glow Orb ────────────────────────────────────────────────────────── */
+#cursorGlow {
+	position: fixed;
+	pointer-events: none;
+	width: 400px;
+	height: 400px;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, transparent 70%);
+	transform: translate(-50%, -50%);
+	z-index: 0;
+	transition: transform 0.12s ease-out;
+	will-change: transform;
+}
+
+/* ── Button Click Ripple/Shockwave ──────────────────────────────────────────── */
+.btn-ripple-wave {
+	position: absolute;
+	border-radius: 50%;
+	transform: scale(0);
+	background: rgba(255, 255, 255, 0.35);
+	pointer-events: none;
+	animation: btnRippleExpand 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes btnRippleExpand {
+	to {
+		transform: scale(4);
+		opacity: 0;
+	}
+}
+
+button {
+	overflow: hidden;
+}
+
+/* ── 3D Card Tilt ───────────────────────────────────────────────────────────── */
+.event-card {
+	transform-style: preserve-3d;
+	will-change: transform;
+}
+
+.event-card .card-tilt-shine {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: radial-gradient(
+		circle at var(--shine-x, 50%) var(--shine-y, 50%),
+		rgba(255, 255, 255, 0.12),
+		transparent 60%
+	);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 200ms ease;
+}
+
+.event-card:hover .card-tilt-shine {
+	opacity: 1;
+}
+
+/* ── Glitch Brand Name ──────────────────────────────────────────────────────── */
+.brand-mark {
+	position: relative;
+}
+
+.brand-mark.glitch-active {
+	animation: glitch 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes glitch {
+	0% { transform: translate(0); filter: none; }
+	10% { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
+	20% { transform: translate(2px, -1px); clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%); }
+	30% { transform: translate(-1px, 2px); clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%); }
+	40% { transform: translate(2px, 0); filter: hue-rotate(-90deg); }
+	50% { transform: translate(-2px, 1px); clip-path: none; }
+	60% { transform: translate(1px, -2px); filter: brightness(1.5); }
+	70% { transform: translate(-1px, 0); }
+	80% { transform: translate(2px, 1px); filter: none; }
+	90% { transform: translate(-1px, -1px); }
+	100% { transform: translate(0); filter: none; clip-path: none; }
+}
+
+/* ── Animated Sidebar Border (conic gradient spin) ──────────────────────────── */
+.sidebar {
+	position: sticky;
+	top: 20px;
+	/* Override border to none — we'll use ::before for animated border */
+	border-color: transparent;
+}
+
+.sidebar::before {
+	content: "";
+	position: absolute;
+	inset: -1.5px;
+	border-radius: 25px;
+	background: conic-gradient(
+		from var(--border-angle, 0deg),
+		rgba(129, 140, 248, 0.0) 0%,
+		rgba(129, 140, 248, 0.6) 20%,
+		rgba(167, 139, 250, 0.8) 40%,
+		rgba(56, 189, 248, 0.5) 60%,
+		rgba(129, 140, 248, 0.0) 80%
+	);
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	padding: 1.5px;
+	z-index: 0;
+	pointer-events: none;
+	animation: rotateBorder 6s linear infinite;
+}
+
+@property --border-angle {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 0deg;
+}
+
+@keyframes rotateBorder {
+	to { --border-angle: 360deg; }
+}
+
+/* ── Typewriter Cursor on Hero Sub ─────────────────────────────────────────── */
+.typewriter-cursor {
+	display: inline-block;
+	width: 2px;
+	height: 1em;
+	background: var(--accent);
+	margin-left: 3px;
+	vertical-align: middle;
+	border-radius: 2px;
+	animation: cursorBlink 0.9s steps(1) infinite;
+}
+
+@keyframes cursorBlink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+
+/* ── Neon Glow Widget Value ─────────────────────────────────────────────────── */
+.widget-value {
+	animation: neonFlicker 4s ease-in-out infinite;
+}
+
+.tone-live .widget-value {
+	animation: neonFlickerGreen 4s ease-in-out infinite;
+}
+
+@keyframes neonFlicker {
+	0%, 100% { text-shadow: 0 0 6px rgba(129, 140, 248, 0.4), 0 0 14px rgba(129, 140, 248, 0.2); }
+	20% { text-shadow: 0 0 10px rgba(167, 139, 250, 0.6), 0 0 22px rgba(129, 140, 248, 0.3); }
+	50% { text-shadow: 0 0 4px rgba(129, 140, 248, 0.2); }
+	80% { text-shadow: 0 0 12px rgba(56, 189, 248, 0.5), 0 0 20px rgba(129, 140, 248, 0.25); }
+}
+
+@keyframes neonFlickerGreen {
+	0%, 100% { text-shadow: 0 0 6px rgba(52, 211, 153, 0.5), 0 0 14px rgba(52, 211, 153, 0.25); }
+	40% { text-shadow: 0 0 12px rgba(52, 211, 153, 0.8), 0 0 24px rgba(52, 211, 153, 0.4); }
+	70% { text-shadow: 0 0 4px rgba(52, 211, 153, 0.2); }
+}
+
+/* ── Particle Sparks on Mini Widget ────────────────────────────────────────── */
+.mini-widget {
+	position: relative;
+	overflow: hidden;
+}
+
+.widget-particle {
+	position: absolute;
+	border-radius: 50%;
+	pointer-events: none;
+	opacity: 0;
+	animation: particleDrift var(--p-dur, 3s) var(--p-delay, 0s) ease-in-out infinite;
+}
+
+@keyframes particleDrift {
+	0% {
+		opacity: 0;
+		transform: translate(0, 0) scale(0);
+	}
+	20% {
+		opacity: 0.8;
+		transform: translate(var(--p-tx1, 10px), var(--p-ty1, -15px)) scale(1);
+	}
+	80% {
+		opacity: 0.3;
+		transform: translate(var(--p-tx2, 20px), var(--p-ty2, -40px)) scale(0.5);
+	}
+	100% {
+		opacity: 0;
+		transform: translate(var(--p-tx3, 25px), var(--p-ty3, -60px)) scale(0);
+	}
+}
+
+/* ── Search bar focus glow pulse ────────────────────────────────────────────── */
+.search-shell:focus-within {
+	animation: searchPulse 2s ease-in-out infinite;
+}
+
+@keyframes searchPulse {
+	0%, 100% { box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2); }
+	50% { box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.35), 0 0 20px rgba(129, 140, 248, 0.15); }
+}
+
+/* ── Topbar entrance drop ────────────────────────────────────────────────────── */
+.topbar {
+	animation: topbarDrop 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes topbarDrop {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ── Sidebar entrance slide ──────────────────────────────────────────────────── */
+.sidebar {
+	animation: sidebarSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sidebarSlide {
+	from {
+		opacity: 0;
+		transform: translateX(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* ── Mini-card hover sparkle burst ──────────────────────────────────────────── */
+.mini-card {
+	position: relative;
+	overflow: hidden;
+}
+
+.mini-card::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		circle at var(--card-mx, 50%) var(--card-my, 50%),
+		rgba(129, 140, 248, 0.1),
+		transparent 55%
+	);
+	opacity: 0;
+	transition: opacity 300ms ease;
+	pointer-events: none;
+}
+
+.mini-card:hover::after {
+	opacity: 1;
+}
+
+/* ── Floating Action Badge Pulse ────────────────────────────────────────────── */
+.hero-chip {
+	animation: chipFloat 3s ease-in-out infinite;
+}
+
+@keyframes chipFloat {
+	0%, 100% { transform: translateY(0); }
+	50% { transform: translateY(-4px); }
+}
+
+/* ── Input focus shimmer border ─────────────────────────────────────────────── */
+input:focus,
+select:focus {
+	animation: inputGlow 2s ease-in-out infinite;
+}
+
+@keyframes inputGlow {
+	0%, 100% { box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2); }
+	50% { box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.35), 0 0 14px rgba(129, 140, 248, 0.15); }
+}
+
+/* ── Loading shimmer on table rows ──────────────────────────────────────────── */
+.table-shimmer td {
+	background: linear-gradient(90deg, transparent 0%, rgba(129,140,248,0.06) 50%, transparent 100%);
+	background-size: 200% 100%;
+	animation: tableShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes tableShimmer {
+	0% { background-position: -200% 0; }
+	100% { background-position: 200% 0; }
+}
+
+/* ── Profile card avatar ring spin ─────────────────────────────────────────── */
+.profile-card:hover .avatar {
+	animation: avatarSpin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes avatarSpin {
+	from { transform: rotate(-10deg) scale(0.92); }
+	to { transform: rotate(0deg) scale(1.08); }
+}
+
+/* ── Button press spring ────────────────────────────────────────────────────── */
+button:active {
+	animation: btnSpring 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes btnSpring {
+	0% { transform: scale(0.93); }
+	60% { transform: scale(1.04); }
+	100% { transform: scale(1); }
+}
+
+/* ── Panel tab switch morph ─────────────────────────────────────────────────── */
+.panel.active {
+	animation: panelMorph 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes panelMorph {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.98);
+		filter: blur(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+		filter: blur(0);
+	}
+}
+
+/* ── Reduced Motion Overrides ───────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	#scrollProgressBar,
+	#cursorGlow,
+	.widget-particle,
+	.hero-chip,
+	.brand-mark,
+	.topbar,
+	.sidebar {
+		animation: none !important;
+		transition: none !important;
+	}
+
+	.sidebar::before {
+		animation: none !important;
 	}
 }
 
