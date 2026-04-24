@@ -1417,6 +1417,97 @@ async function init() {
 	updateOrganizerUI();
 	refreshAll();
 	initScrollSpy();
+	initScrollReveal();
+	initSideNavRipple();
+	initCountUpObserver();
+}
+
+// ─── Animation: Scroll Reveal ──────────────────────────────────────────────────
+function initScrollReveal() {
+	const revealElements = document.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale");
+	if (!revealElements.length) return;
+
+	// Respect reduced-motion preference
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	if (prefersReducedMotion) {
+		revealElements.forEach((el) => el.classList.add("is-visible"));
+		return;
+	}
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add("is-visible");
+					observer.unobserve(entry.target);
+				}
+			});
+		},
+		{ threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+	);
+
+	revealElements.forEach((el) => observer.observe(el));
+}
+
+// ─── Animation: Side Nav Ripple Tracking ───────────────────────────────────────
+function initSideNavRipple() {
+	document.querySelectorAll(".side-nav-link").forEach((link) => {
+		link.addEventListener("mousemove", (e) => {
+			const rect = link.getBoundingClientRect();
+			const x = ((e.clientX - rect.left) / rect.width) * 100;
+			const y = ((e.clientY - rect.top) / rect.height) * 100;
+			link.style.setProperty("--ripple-x", x + "%");
+			link.style.setProperty("--ripple-y", y + "%");
+		});
+	});
+}
+
+// ─── Animation: Count-Up for Widget Values ─────────────────────────────────────
+function animateCountUp(element, targetValue, duration = 800) {
+	const start = performance.now();
+	const startValue = 0;
+
+	function step(timestamp) {
+		const elapsed = timestamp - start;
+		const progress = Math.min(elapsed / duration, 1);
+		// Ease-out cubic
+		const eased = 1 - Math.pow(1 - progress, 3);
+		const current = Math.round(startValue + (targetValue - startValue) * eased);
+		element.textContent = String(current).padStart(2, "0");
+
+		if (progress < 1) {
+			requestAnimationFrame(step);
+		}
+	}
+
+	requestAnimationFrame(step);
+}
+
+function initCountUpObserver() {
+	const widgetValues = document.querySelectorAll(".widget-value");
+	if (!widgetValues.length) return;
+
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	if (prefersReducedMotion) return;
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					const el = entry.target;
+					const rawText = el.textContent.trim();
+					const numericValue = parseInt(rawText, 10);
+					if (!isNaN(numericValue) && numericValue > 0) {
+						animateCountUp(el, numericValue, 900);
+					}
+					observer.unobserve(el);
+				}
+			});
+		},
+		{ threshold: 0.5 }
+	);
+
+	widgetValues.forEach((el) => observer.observe(el));
 }
 
 init()

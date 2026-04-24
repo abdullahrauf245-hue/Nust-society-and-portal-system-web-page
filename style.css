@@ -1373,6 +1373,457 @@ tbody tr:hover {
 	scroll-margin-top: 96px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ANIMATION SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scroll-Reveal Entrance ─────────────────────────────────────────────────── */
+.reveal {
+	opacity: 0;
+	transform: translateY(36px);
+	transition:
+		opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+	will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* Slide-in variants */
+.reveal-left {
+	opacity: 0;
+	transform: translateX(-40px);
+	transition:
+		opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+	will-change: opacity, transform;
+}
+
+.reveal-left.is-visible {
+	opacity: 1;
+	transform: translateX(0);
+}
+
+.reveal-right {
+	opacity: 0;
+	transform: translateX(40px);
+	transition:
+		opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+	will-change: opacity, transform;
+}
+
+.reveal-right.is-visible {
+	opacity: 1;
+	transform: translateX(0);
+}
+
+/* Scale-up entrance */
+.reveal-scale {
+	opacity: 0;
+	transform: scale(0.88);
+	transition:
+		opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+	will-change: opacity, transform;
+}
+
+.reveal-scale.is-visible {
+	opacity: 1;
+	transform: scale(1);
+}
+
+/* ── Staggered Delays ───────────────────────────────────────────────────────── */
+.stagger-1 { transition-delay: 0.06s; }
+.stagger-2 { transition-delay: 0.12s; }
+.stagger-3 { transition-delay: 0.18s; }
+.stagger-4 { transition-delay: 0.24s; }
+.stagger-5 { transition-delay: 0.30s; }
+.stagger-6 { transition-delay: 0.36s; }
+.stagger-7 { transition-delay: 0.42s; }
+.stagger-8 { transition-delay: 0.48s; }
+
+/* ── Ambient Floating Background Orbs ───────────────────────────────────────── */
+body::after {
+	content: "";
+	position: fixed;
+	top: -20%;
+	left: -10%;
+	width: 70vw;
+	height: 70vh;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(129, 140, 248, 0.06), transparent 65%);
+	pointer-events: none;
+	z-index: -1;
+	animation: floatOrb1 18s ease-in-out infinite;
+}
+
+@keyframes floatOrb1 {
+	0%, 100% { transform: translate(0, 0) scale(1); }
+	25% { transform: translate(12vw, 8vh) scale(1.08); }
+	50% { transform: translate(5vw, 18vh) scale(0.95); }
+	75% { transform: translate(-8vw, 6vh) scale(1.04); }
+}
+
+/* Second orb via sidebar pseudo — only on large screens */
+@media (min-width: 901px) {
+	.workspace::before {
+		content: "";
+		position: fixed;
+		bottom: -15%;
+		right: -10%;
+		width: 55vw;
+		height: 55vh;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(167, 139, 250, 0.05), transparent 60%);
+		pointer-events: none;
+		z-index: -1;
+		animation: floatOrb2 22s ease-in-out infinite;
+	}
+}
+
+@keyframes floatOrb2 {
+	0%, 100% { transform: translate(0, 0) scale(1); }
+	30% { transform: translate(-10vw, -6vh) scale(1.06); }
+	60% { transform: translate(-4vw, -14vh) scale(0.96); }
+	80% { transform: translate(6vw, -3vh) scale(1.02); }
+}
+
+/* ── Heading Shimmer ────────────────────────────────────────────────────────── */
+.topbar h1 {
+	background: linear-gradient(
+		120deg,
+		var(--text) 0%,
+		var(--text) 35%,
+		var(--accent) 50%,
+		var(--text) 65%,
+		var(--text) 100%
+	);
+	background-size: 250% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+	0%, 100% { background-position: 200% center; }
+	50% { background-position: -50% center; }
+}
+
+/* ── Sparkline Bar Grow ─────────────────────────────────────────────────────── */
+.sparkline-bar {
+	transform-origin: bottom;
+	animation: barGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sparkline-bar:nth-child(1) { animation-delay: 0.08s; }
+.sparkline-bar:nth-child(2) { animation-delay: 0.14s; }
+.sparkline-bar:nth-child(3) { animation-delay: 0.20s; }
+.sparkline-bar:nth-child(4) { animation-delay: 0.26s; }
+.sparkline-bar:nth-child(5) { animation-delay: 0.32s; }
+.sparkline-bar:nth-child(6) { animation-delay: 0.38s; }
+.sparkline-bar:nth-child(7) { animation-delay: 0.44s; }
+
+@keyframes barGrow {
+	from {
+		transform: scaleY(0);
+		opacity: 0;
+	}
+	to {
+		transform: scaleY(1);
+		opacity: 0.9;
+	}
+}
+
+/* ── Progress Bar Animated Fill ─────────────────────────────────────────────── */
+.widget-progress-fill {
+	animation: progressFill 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+@keyframes progressFill {
+	from { width: 0 !important; }
+}
+
+/* Add a subtle glow sweep on the progress bar */
+.widget-progress-fill::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.3) 50%,
+		transparent 100%
+	);
+	background-size: 200% 100%;
+	animation: progressSweep 2.4s ease-in-out 1.4s infinite;
+}
+
+@keyframes progressSweep {
+	0% { background-position: -200% 0; }
+	100% { background-position: 200% 0; }
+}
+
+.widget-progress-fill {
+	position: relative;
+	overflow: hidden;
+}
+
+/* ── Console Typing Cursor ──────────────────────────────────────────────────── */
+.console::after {
+	content: "▌";
+	display: inline;
+	color: var(--accent);
+	animation: blink 1s steps(1) infinite;
+	margin-left: 2px;
+}
+
+@keyframes blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+
+/* ── Side Nav Link Ripple ───────────────────────────────────────────────────── */
+.side-nav-link {
+	overflow: hidden;
+}
+
+.side-nav-link::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+		rgba(129, 140, 248, 0.2), transparent 60%);
+	opacity: 0;
+	transition: opacity 300ms ease;
+	pointer-events: none;
+}
+
+.side-nav-link:hover::after {
+	opacity: 1;
+}
+
+/* ── Card Hover Glow (global) ───────────────────────────────────────────────── */
+.mini-widget,
+.mini-card,
+.card,
+.feature-card,
+.hero-panel {
+	transition:
+		transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 280ms ease,
+		border-color 280ms ease;
+}
+
+.mini-widget:hover,
+.mini-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 22px 44px rgba(79, 70, 229, 0.18);
+	border-color: rgba(129, 140, 248, 0.38);
+}
+
+/* ── Widget Value Count-Up (JS drives this class) ───────────────────────────── */
+.count-up {
+	display: inline-block;
+	transition: transform 0.15s ease;
+}
+
+.count-up.tick {
+	transform: scale(1.08);
+}
+
+/* ── Featured Event Card Enter ──────────────────────────────────────────────── */
+.event-card {
+	animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.featured-grid .event-card:nth-child(1) { animation-delay: 0.1s; }
+.featured-grid .event-card:nth-child(2) { animation-delay: 0.22s; }
+.featured-grid .event-card:nth-child(3) { animation-delay: 0.34s; }
+
+@keyframes cardEnter {
+	from {
+		opacity: 0;
+		transform: translateY(28px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ── Stats Grid Widget Enter ────────────────────────────────────────────────── */
+.mini-widget {
+	animation: widgetEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stats-grid .mini-widget:nth-child(1) { animation-delay: 0.05s; }
+.stats-grid .mini-widget:nth-child(2) { animation-delay: 0.13s; }
+.stats-grid .mini-widget:nth-child(3) { animation-delay: 0.21s; }
+.stats-grid .mini-widget:nth-child(4) { animation-delay: 0.29s; }
+
+@keyframes widgetEnter {
+	from {
+		opacity: 0;
+		transform: translateY(22px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ── Table Row Fade In ──────────────────────────────────────────────────────── */
+tbody tr {
+	animation: rowFadeIn 0.35s ease both;
+}
+
+tbody tr:nth-child(1) { animation-delay: 0.04s; }
+tbody tr:nth-child(2) { animation-delay: 0.08s; }
+tbody tr:nth-child(3) { animation-delay: 0.12s; }
+tbody tr:nth-child(4) { animation-delay: 0.16s; }
+tbody tr:nth-child(5) { animation-delay: 0.20s; }
+tbody tr:nth-child(6) { animation-delay: 0.24s; }
+
+@keyframes rowFadeIn {
+	from {
+		opacity: 0;
+		transform: translateX(-12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* ── Toast Bounce Entry ─────────────────────────────────────────────────────── */
+.toast.show {
+	animation: toastBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes toastBounce {
+	0% {
+		opacity: 0;
+		transform: translateY(24px) scale(0.92);
+	}
+	60% {
+		opacity: 1;
+		transform: translateY(-4px) scale(1.02);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* ── Tab Underline Slide ────────────────────────────────────────────────────── */
+.tab.active {
+	position: relative;
+}
+
+.tab.active::after {
+	content: "";
+	position: absolute;
+	bottom: -1px;
+	left: 20%;
+	right: 20%;
+	height: 2px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, var(--accent), var(--accent-alt));
+	animation: tabSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes tabSlideIn {
+	from {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	to {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+/* ── Sidebar Brand Pulse ────────────────────────────────────────────────────── */
+.brand-mark {
+	display: inline-block;
+	animation: brandPulse 3s ease-in-out infinite;
+}
+
+@keyframes brandPulse {
+	0%, 100% { text-shadow: 0 0 0 transparent; }
+	50% { text-shadow: 0 0 20px rgba(129, 140, 248, 0.35); }
+}
+
+/* ── Avatar Breathe ─────────────────────────────────────────────────────────── */
+.avatar {
+	animation: avatarBreathe 3.5s ease-in-out infinite;
+}
+
+@keyframes avatarBreathe {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(199, 210, 254, 0); }
+	50% { box-shadow: 0 0 16px 4px rgba(199, 210, 254, 0.25); }
+}
+
+/* ── Sidebar Active Indicator Glow ──────────────────────────────────────────── */
+.side-nav-link.active::before {
+	animation: activeGlow 2s ease-in-out infinite;
+}
+
+@keyframes activeGlow {
+	0%, 100% { box-shadow: 0 0 24px rgba(129, 140, 248, 0.55); }
+	50% { box-shadow: 0 0 32px rgba(129, 140, 248, 0.85), 0 0 10px rgba(167, 139, 250, 0.4); }
+}
+
+/* ── Live Dot Enhanced Pulse ────────────────────────────────────────────────── */
+.hero-live-dot::before,
+.live-dot::before {
+	content: "";
+	position: absolute;
+	inset: -3px;
+	border-radius: 50%;
+	background: transparent;
+	border: 1.5px solid rgba(52, 211, 153, 0.3);
+	animation: dotRing 2.2s ease-out infinite;
+}
+
+@keyframes dotRing {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+}
+
+/* ── Reduced Motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	.reveal,
+	.reveal-left,
+	.reveal-right,
+	.reveal-scale {
+		opacity: 1;
+		transform: none;
+	}
+}
+
 @media (max-width: 1320px) {
 	.app-shell {
 		grid-template-columns: 252px minmax(0, 1fr);
