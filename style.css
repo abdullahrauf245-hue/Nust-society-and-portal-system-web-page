@@ -2672,45 +2672,44 @@ button {
 	100% { transform: translate(0); filter: none; clip-path: none; }
 }
 
-/* ── Animated Sidebar Border (conic gradient spin) ──────────────────────────── */
+/* ── Animated Sidebar Border Glow ────────────────────────────────────────────── */
 .sidebar {
 	position: sticky;
 	top: 20px;
-	/* Override border to none — we'll use ::before for animated border */
-	border-color: transparent;
+	animation:
+		sidebarSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) both,
+		sidebarBorderGlow 4s ease-in-out 1s infinite;
 }
 
-.sidebar::before {
-	content: "";
-	position: absolute;
-	inset: -1.5px;
-	border-radius: 25px;
-	background: conic-gradient(
-		from var(--border-angle, 0deg),
-		rgba(129, 140, 248, 0.0) 0%,
-		rgba(129, 140, 248, 0.6) 20%,
-		rgba(167, 139, 250, 0.8) 40%,
-		rgba(56, 189, 248, 0.5) 60%,
-		rgba(129, 140, 248, 0.0) 80%
-	);
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-	mask-composite: exclude;
-	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-	-webkit-mask-composite: xor;
-	padding: 1.5px;
-	z-index: 0;
-	pointer-events: none;
-	animation: rotateBorder 6s linear infinite;
-}
-
-@property --border-angle {
-	syntax: "<angle>";
-	inherits: false;
-	initial-value: 0deg;
-}
-
-@keyframes rotateBorder {
-	to { --border-angle: 360deg; }
+@keyframes sidebarBorderGlow {
+	0%, 100% {
+		box-shadow:
+			var(--shadow-strong),
+			0 0 0 1px rgba(129, 140, 248, 0.3),
+			0 0 20px rgba(129, 140, 248, 0.1);
+		border-color: rgba(129, 140, 248, 0.3);
+	}
+	25% {
+		box-shadow:
+			var(--shadow-strong),
+			0 0 0 1px rgba(167, 139, 250, 0.55),
+			0 0 30px rgba(167, 139, 250, 0.18);
+		border-color: rgba(167, 139, 250, 0.55);
+	}
+	50% {
+		box-shadow:
+			var(--shadow-strong),
+			0 0 0 1px rgba(56, 189, 248, 0.45),
+			0 0 26px rgba(56, 189, 248, 0.14);
+		border-color: rgba(56, 189, 248, 0.45);
+	}
+	75% {
+		box-shadow:
+			var(--shadow-strong),
+			0 0 0 1px rgba(52, 211, 153, 0.4),
+			0 0 22px rgba(52, 211, 153, 0.12);
+		border-color: rgba(52, 211, 153, 0.4);
+	}
 }
 
 /* ── Typewriter Cursor on Hero Sub ─────────────────────────────────────────── */
@@ -2811,11 +2810,7 @@ button {
 	}
 }
 
-/* ── Sidebar entrance slide ──────────────────────────────────────────────────── */
-.sidebar {
-	animation: sidebarSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
+/* ── Sidebar entrance slide (combined with border glow above) ────────────────── */
 @keyframes sidebarSlide {
 	from {
 		opacity: 0;
