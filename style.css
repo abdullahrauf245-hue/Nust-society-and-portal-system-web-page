@@ -2672,13 +2672,13 @@ button {
 	100% { transform: translate(0); filter: none; clip-path: none; }
 }
 
-/* ── Animated Sidebar Border Glow ────────────────────────────────────────────── */
-.sidebar {
-	position: sticky;
-	top: 20px;
-	animation:
-		sidebarSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) both,
-		sidebarBorderGlow 4s ease-in-out 1s infinite;
+/* ── Animated Sidebar Border Glow (desktop only) ─────────────────────────────── */
+@media (min-width: 901px) {
+	.sidebar {
+		animation:
+			sidebarSlide 0.9s cubic-bezier(0.16, 1, 0.3, 1) both,
+			sidebarBorderGlow 4s ease-in-out 1s infinite;
+	}
 }
 
 @keyframes sidebarBorderGlow {
