@@ -54,6 +54,7 @@ const organizerLoginForm = document.getElementById("organizerLoginForm");
 const organizerSocietySelect = document.getElementById("organizerSocietySelect");
 const organizerSession = document.getElementById("organizerSession");
 const organizerActions = document.getElementById("organizerActions");
+const organizerEventsList = document.getElementById("organizerEventsList");
 const addEventForm = document.getElementById("addEventForm");
 const newEventType = document.getElementById("newEventType");
 const newEventRegistrationUrl = document.getElementById("newEventRegistrationUrl");
@@ -1013,28 +1014,37 @@ async function showUpcoming() {
 async function showMyEvents() {
 	if (!loggedInOrganizer) return;
 
-	const { data, error } = await supabase
-		.from("events")
-		.select()
-		.eq("society_id", loggedInOrganizer.id)
-		.order("date", { ascending: true });
-
-	if (error) {
-		logLine("Error loading events: " + error.message);
-		return;
+	const myEvents = events.filter((e) => e.society_id === loggedInOrganizer.id);
+	
+	if (!myEvents.length) {
+		organizerEventsList.innerHTML = '<p class="muted">You have no events yet.</p>';
+	} else {
+		organizerEventsList.innerHTML = `
+			<table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+				<thead>
+					<tr>
+						<th style="text-align: left; border-bottom: 1px solid var(--line); padding: 8px;">Title</th>
+						<th style="text-align: left; border-bottom: 1px solid var(--line); padding: 8px;">Date</th>
+						<th style="text-align: right; border-bottom: 1px solid var(--line); padding: 8px;">Manage</th>
+					</tr>
+				</thead>
+				<tbody>
+					${myEvents.map(e => `
+						<tr>
+							<td style="border-bottom: 1px dashed var(--line); padding: 8px;">${e.title}</td>
+							<td style="border-bottom: 1px dashed var(--line); padding: 8px;">${formatDate(e.date)}</td>
+							<td style="border-bottom: 1px dashed var(--line); padding: 8px; text-align: right;">
+								<button type="button" class="delete-event" data-event-id="${e.id}" style="padding: 6px 12px; font-size: 0.8rem;">Delete</button>
+							</td>
+						</tr>
+					`).join('')}
+				</tbody>
+			</table>
+		`;
 	}
-
-	if (!data || !data.length) {
-		logLine(loggedInOrganizer.name + " has no events yet.");
-		return;
-	}
-
-	const lines = ["Events by " + loggedInOrganizer.name + ":"];
-	data.forEach((raw, i) => {
-		const e = applyPinnedEventOverrides(raw);
-		lines.push("  " + (i + 1) + ". " + e.title + " | " + formatDate(e.date));
-	});
-	logLine(lines.join("\n"));
+	
+	organizerEventsList.classList.remove("hidden");
+	toastMsg("Showing your events");
 }
 
 async function showAttendees() {
@@ -1109,6 +1119,9 @@ async function deleteOrganizerEvent(eventId) {
 
 	events = events.filter((e) => e.id !== eventId);
 	refreshAll();
+	if (organizerEventsList && !organizerEventsList.classList.contains("hidden")) {
+		showMyEvents();
+	}
 	toastMsg("Event deleted");
 	logLine('Event "' + event.title + '" deleted by ' + loggedInOrganizer.name + '.');
 }
@@ -1319,6 +1332,15 @@ function bind() {
 		if (!openButton) return;
 		window.open(openButton.dataset.link, "_blank", "noopener");
 	});
+
+	if (organizerEventsList) {
+		organizerEventsList.addEventListener("click", (event) => {
+			const deleteButton = event.target.closest(".delete-event");
+			if (deleteButton) {
+				deleteOrganizerEvent(deleteButton.dataset.eventId);
+			}
+		});
+	}
 
 	if (featuredEventsGrid) {
 		featuredEventsGrid.addEventListener("click", (event) => {
