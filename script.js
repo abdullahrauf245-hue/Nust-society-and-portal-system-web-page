@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = "https://xargsubmycnxehyiypxy.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhcmdzdWJteWNueGVoeWl5cHh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTc5OTMsImV4cCI6MjA5MTgzMzk5M30.tz5ql4lNz8x8LMmY4BLyGj_zo51YHoP6ryNdJW_Vb3Y";
+const SUPABASE_URL = "https://snzbxtwltqysdpdirsce.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4jzwMEIpRG1nFNSSyx35gQ_FhYBkebF";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const REVIEWABLE_TYPES = new Set(["workshop", "competition", "seminar"]);
@@ -13,7 +13,7 @@ const DATA_MODE_LOCAL = "local";
 let societies = [];
 let events = [];
 let students = [];
-let dataMode = DATA_MODE_LOCAL;
+let dataMode = DATA_MODE_REMOTE;
 let localState = createLocalState();
 let loggedInStudent = null;
 let loggedInOrganizer = null;
