@@ -750,32 +750,38 @@ function updateOrganizerUI() {
 
 // ─── Auth Operations ───────────────────────────────────────────────────────────
 async function registerStudentAccount(payload) {
-	const { data, error } = await supabase
-		.from("students")
-		.insert({
-			name: payload.name,
-			cms_id: payload.cmsId,
-			email: payload.email,
-			password_hash: payload.password,
-			section: payload.section,
-		})
-		.select()
-		.single();
+	const { data, error } = await supabase.auth.signUp({
+		email: payload.email,
+		password: payload.password,
+		options: {
+			data: {
+				full_name: payload.name, 
+				cms_id: payload.cmsId,
+				section: payload.section
+			}
+		}
+	});
 
 	if (error) {
-		if (error.code === "23505") {
-			toastMsg("CMS ID or email already exists");
-			logLine("CMS ID or email already registered.");
-			return;
-		}
 		toastMsg("Registration failed");
 		logLine("Registration error: " + error.message);
 		return;
 	}
 
-	students.push(data);
-	toastMsg("Student registered");
-	logLine("Registration successful! Welcome, " + payload.name + ".");
+	if (data.user) {
+		const newStudent = {
+			id: data.user.id,
+			name: payload.name,
+			cms_id: payload.cmsId,
+			email: payload.email,
+			section: payload.section
+		};
+		students.push(newStudent);
+		loggedInStudent = newStudent;
+		updateStudentUI();
+		toastMsg("Student registered");
+		logLine("Registration successful! Welcome, " + payload.name + ".");
+	}
 }
 
 async function loginStudent(cmsId, password) {
@@ -1451,7 +1457,6 @@ async function init() {
 	initScrollReveal();
 	initSideNavRipple();
 	initCountUpObserver();
-	initScrollProgress();
 	initCardTilt();
 }
 
