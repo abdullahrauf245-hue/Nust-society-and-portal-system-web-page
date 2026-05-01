@@ -16,6 +16,8 @@
 	--shadow-strong: 0 24px 60px rgba(2, 6, 23, 0.6);
 }
 
+/* minor update */
+
 :root[data-theme="light"] {
 	--bg-0: #f8fafc;
 	--bg-1: #e2e8f0;
