@@ -167,7 +167,7 @@ function normalizeRegistrationUrl(rawUrl) {
 	try {
 		return new URL(withProtocol).toString();
 	} catch {
-		return null;
+		return raw;
 	}
 }
 
@@ -1152,11 +1152,7 @@ async function addOrganizerEvent() {
 	const extra1 = newEventExtra1.value.trim();
 	const extra2 = newEventExtra2.value.trim();
 
-	if (registrationUrl === null) {
-		toastMsg("Invalid registration URL");
-		logLine("Please provide a valid URL or leave it empty.");
-		return;
-	}
+
 
 	const payload = {
 		title,
