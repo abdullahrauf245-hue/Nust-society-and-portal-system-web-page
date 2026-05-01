@@ -487,31 +487,41 @@ async function refreshAllData() {
 
 // ─── Rendering ─────────────────────────────────────────────────────────────────
 function updateTypeExtras() {
-	const type = newEventType.value;
+	const type = String(newEventType.value).toLowerCase();
 	if (type === "workshop") {
 		newEventExtra1.placeholder = "Duration";
 		newEventExtra2.placeholder = "Prerequisite";
-	}
-	if (type === "concert") {
+	} else if (type === "concert") {
 		newEventExtra1.placeholder = "Performer";
 		newEventExtra2.placeholder = "Genre";
-	}
-	if (type === "competition") {
+	} else if (type === "competition") {
 		newEventExtra1.placeholder = "Prize Pool";
 		newEventExtra2.placeholder = "Team Size";
-	}
-	if (type === "seminar") {
+	} else if (type === "seminar") {
 		newEventExtra1.placeholder = "Speaker";
 		newEventExtra2.placeholder = "Topic";
+	} else {
+		newEventExtra1.placeholder = "Additional Detail 1 (optional)";
+		newEventExtra2.placeholder = "Additional Detail 2 (optional)";
 	}
 }
 
 function renderFilters() {
-	const prev = societyFilter.value;
+	const prevSoc = societyFilter.value;
 	const names = [...new Set(events.map((e) => e.society))].sort();
 	societyFilter.innerHTML = '<option value="all">All</option>' + names.map((n) => '<option value="' + n + '">' + n + '</option>').join("");
-	if (names.includes(prev)) {
-		societyFilter.value = prev;
+	if (names.includes(prevSoc)) {
+		societyFilter.value = prevSoc;
+	}
+
+	const prevType = typeFilter.value;
+	const types = [...new Set(events.map((e) => e.type))].sort();
+	typeFilter.innerHTML = '<option value="all">All</option>' + types.map((t) => {
+		const label = t.charAt(0).toUpperCase() + t.slice(1);
+		return '<option value="' + t + '">' + label + '</option>';
+	}).join("");
+	if (types.includes(prevType)) {
+		typeFilter.value = prevType;
 	}
 }
 
@@ -1160,21 +1170,23 @@ async function addOrganizerEvent() {
 		registration_link: registrationUrl || null,
 	};
 
-	if (type === "workshop") {
+	const typeLower = type.toLowerCase();
+	if (typeLower === "workshop") {
 		payload.duration = extra1;
 		payload.prerequisite = extra2;
-	}
-	if (type === "concert") {
+	} else if (typeLower === "concert") {
 		payload.performer = extra1;
 		payload.genre = extra2;
-	}
-	if (type === "competition") {
+	} else if (typeLower === "competition") {
 		payload.prize_pool = extra1;
 		payload.team_size = Number(extra2) || 1;
-	}
-	if (type === "seminar") {
+	} else if (typeLower === "seminar") {
 		payload.speaker = extra1;
 		payload.topic = extra2;
+	} else {
+		if (extra1 || extra2) {
+			payload.description += "\n\nAdditional Info:\n" + (extra1 ? "- " + extra1 + "\n" : "") + (extra2 ? "- " + extra2 : "");
+		}
 	}
 
 	const { data, error } = await supabase.from("events").insert(payload).select().single();
@@ -1398,6 +1410,7 @@ function bind() {
 	});
 
 	newEventType.addEventListener("change", updateTypeExtras);
+	newEventType.addEventListener("input", updateTypeExtras);
 	addEventForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		await addOrganizerEvent();
