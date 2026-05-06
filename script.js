@@ -558,6 +558,7 @@ function setActiveSideNav(target) {
 function renderDashboardStats() {
 	if (!statsGrid) return;
 
+	const totalEvents = events.length;
 	const societyCount = new Set(events.map((event) => event.society)).size;
 	const registrations = totalRegistrations();
 	const totalCapacity = events.reduce((sum, event) => sum + Number(event.seats || 0), 0);
@@ -577,6 +578,14 @@ function renderDashboardStats() {
 	}).join("");
 
 	statsGrid.innerHTML =
+		'<article class="mini-widget">' +
+			'<div class="widget-head">' +
+				'<p class="widget-label">Total Events</p>' +
+				'<span class="widget-note">Listed</span>' +
+			'</div>' +
+			'<div class="widget-value">' + String(totalEvents).padStart(2, "0") + '</div>' +
+			'<p class="widget-note">All upcoming listings</p>' +
+		'</article>' +
 		'<article class="mini-widget">' +
 			'<div class="widget-head">' +
 				'<p class="widget-label">Registrations</p>' +
