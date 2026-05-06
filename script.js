@@ -29,7 +29,6 @@ const societyFilter = document.getElementById("societyFilter");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const statsGrid = document.getElementById("statsGrid");
 const featuredEventsGrid = document.getElementById("featuredEventsGrid");
-const liveCounter = document.getElementById("liveCounter");
 const refreshFeaturedBtn = document.getElementById("refreshFeaturedBtn");
 const jumpStudentBtn = document.getElementById("jumpStudentBtn");
 const jumpOrganizerBtn = document.getElementById("jumpOrganizerBtn");
@@ -559,7 +558,6 @@ function setActiveSideNav(target) {
 function renderDashboardStats() {
 	if (!statsGrid) return;
 
-	const liveEvents = events.length;
 	const societyCount = new Set(events.map((event) => event.society)).size;
 	const registrations = totalRegistrations();
 	const totalCapacity = events.reduce((sum, event) => sum + Number(event.seats || 0), 0);
@@ -579,14 +577,6 @@ function renderDashboardStats() {
 	}).join("");
 
 	statsGrid.innerHTML =
-		'<article class="mini-widget tone-live">' +
-			'<div class="widget-head">' +
-				'<p class="widget-label">Live Events</p>' +
-				'<span class="live-pill"><span class="live-dot"></span>Live</span>' +
-			'</div>' +
-			'<div class="widget-value">' + String(liveEvents).padStart(2, "0") + '</div>' +
-			'<p class="widget-note">Active and upcoming listings</p>' +
-		'</article>' +
 		'<article class="mini-widget">' +
 			'<div class="widget-head">' +
 				'<p class="widget-label">Registrations</p>' +
@@ -613,10 +603,6 @@ function renderDashboardStats() {
 			'<div class="widget-value">' + String(students.length).padStart(2, "0") + '</div>' +
 			'<p class="widget-note">Registered users who can enroll and review</p>' +
 		'</article>';
-
-	if (liveCounter) {
-		liveCounter.textContent = events.length + (events.length === 1 ? " event live" : " events live");
-	}
 }
 
 function featuredScore(event) {

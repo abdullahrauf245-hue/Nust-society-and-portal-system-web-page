@@ -838,37 +838,6 @@ svg {
 	color: #e0e7ff;
 }
 
-.hero-live {
-	display: inline-flex;
-	align-items: center;
-	gap: 7px;
-	font-size: 0.8rem;
-	font-weight: 600;
-	color: #bbf7d0;
-}
-
-.hero-live-dot,
-.live-dot {
-	position: relative;
-	width: 9px;
-	height: 9px;
-	border-radius: 50%;
-	background: var(--ok);
-	box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65);
-	animation: pulse 1.8s infinite;
-}
-
-@keyframes pulse {
-	0% {
-		box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65);
-	}
-	70% {
-		box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
-	}
-	100% {
-		box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
-	}
-}
 
 .stats-grid {
 	display: grid;
@@ -906,20 +875,6 @@ svg {
 	font-size: 0.86rem;
 }
 
-.live-pill {
-	display: inline-flex;
-	align-items: center;
-	gap: 7px;
-	padding: 4px 10px;
-	border-radius: 999px;
-	font-size: 0.68rem;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: #bbf7d0;
-	border: 1px solid rgba(52, 211, 153, 0.4);
-	background: rgba(16, 185, 129, 0.14);
-}
 
 .widget-progress {
 	position: relative;
@@ -1818,28 +1773,6 @@ tbody tr:nth-child(6) { animation-delay: 0.24s; }
 	50% { box-shadow: 0 0 32px rgba(129, 140, 248, 0.85), 0 0 10px rgba(167, 139, 250, 0.4); }
 }
 
-/* ── Live Dot Enhanced Pulse ────────────────────────────────────────────────── */
-.hero-live-dot::before,
-.live-dot::before {
-	content: "";
-	position: absolute;
-	inset: -3px;
-	border-radius: 50%;
-	background: transparent;
-	border: 1.5px solid rgba(52, 211, 153, 0.3);
-	animation: dotRing 2.2s ease-out infinite;
-}
-
-@keyframes dotRing {
-	0% {
-		transform: scale(1);
-		opacity: 1;
-	}
-	100% {
-		transform: scale(2.4);
-		opacity: 0;
-	}
-}
 
 /* ── Reduced Motion ─────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -2432,15 +2365,6 @@ tbody tr:nth-child(6) { animation-delay: 0.24s; }
 		padding: 7px 10px;
 	}
 
-	.hero-live {
-		font-size: 0.72rem;
-	}
-
-	.hero-live-dot,
-	.live-dot {
-		width: 8px;
-		height: 8px;
-	}
 
 	.stats-grid,
 	.stack-panel,
@@ -2464,10 +2388,6 @@ tbody tr:nth-child(6) { animation-delay: 0.24s; }
 		font-size: 0.76rem;
 	}
 
-	.live-pill {
-		font-size: 0.58rem;
-		padding: 3px 7px;
-	}
 
 	.sparkline {
 		height: 25px;
@@ -2746,9 +2666,6 @@ button {
 	animation: neonFlicker 4s ease-in-out infinite;
 }
 
-.tone-live .widget-value {
-	animation: neonFlickerGreen 4s ease-in-out infinite;
-}
 
 @keyframes neonFlicker {
 	0%, 100% { text-shadow: 0 0 6px rgba(129, 140, 248, 0.4), 0 0 14px rgba(129, 140, 248, 0.2); }
@@ -2757,11 +2674,6 @@ button {
 	80% { text-shadow: 0 0 12px rgba(56, 189, 248, 0.5), 0 0 20px rgba(129, 140, 248, 0.25); }
 }
 
-@keyframes neonFlickerGreen {
-	0%, 100% { text-shadow: 0 0 6px rgba(52, 211, 153, 0.5), 0 0 14px rgba(52, 211, 153, 0.25); }
-	40% { text-shadow: 0 0 12px rgba(52, 211, 153, 0.8), 0 0 24px rgba(52, 211, 153, 0.4); }
-	70% { text-shadow: 0 0 4px rgba(52, 211, 153, 0.2); }
-}
 
 /* ── Particle Sparks on Mini Widget ────────────────────────────────────────── */
 .mini-widget {
