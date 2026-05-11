@@ -167,7 +167,7 @@
 									<th>Title</th>
 									<th>Society</th>
 									<th>Type</th>
-									<th>Date</th>
+									<th>Date &amp; Time</th>
 									<th>Venue</th>
 									<th>Seats</th>
 									<th>Avg Rating</th>
@@ -292,7 +292,8 @@
 										<option value="seminar">
 									</datalist>
 									<input id="newEventTitle" placeholder="Title" required>
-									<input id="newEventDate" placeholder="Date (25-Apr-2026)" required>
+									<input id="newEventDate" type="date" aria-label="Event date" required>
+									<input id="newEventTime" type="time" aria-label="Event time" required>
 									<input id="newEventVenue" placeholder="Venue" required>
 									<input id="newEventCapacity" type="number" min="1" placeholder="Capacity" required>
 									<input id="newEventDescription" placeholder="Description" required>

@@ -56,6 +56,7 @@ const organizerActions = document.getElementById("organizerActions");
 const organizerEventsList = document.getElementById("organizerEventsList");
 const addEventForm = document.getElementById("addEventForm");
 const newEventType = document.getElementById("newEventType");
+const newEventTime = document.getElementById("newEventTime");
 const newEventRegistrationUrl = document.getElementById("newEventRegistrationUrl");
 const newEventExtra1 = document.getElementById("newEventExtra1");
 const newEventExtra2 = document.getElementById("newEventExtra2");
@@ -200,7 +201,7 @@ function formatDate(dateStr) {
 
 	// Parse only ISO-like values from DB (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss).
 	// Human-readable labels like "Delayed - Originally ..." should be shown as-is.
-	const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+	const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::\d{2})?)?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/);
 	if (!isoMatch) return raw;
 
 	const year = Number(isoMatch[1]);
@@ -210,7 +211,14 @@ function formatDate(dateStr) {
 	if (isNaN(d.getTime())) return raw;
 
 	const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	return d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
+	const dateLabel = d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
+	const hour = Number(isoMatch[4]);
+	const minute = Number(isoMatch[5]);
+	if (Number.isFinite(hour) && Number.isFinite(minute)) {
+		const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+		return dateLabel + " " + timeLabel;
+	}
+	return dateLabel;
 }
 
 function normalizeEventTitle(title) {
@@ -526,7 +534,7 @@ function renderFilters() {
 
 function renderEventSelect() {
 	const prev = studentEventSelect.value;
-	studentEventSelect.innerHTML = events.map((e) => '<option value="' + e.id + '">' + e.title + ' | ' + e.type + '</option>').join("");
+	studentEventSelect.innerHTML = events.map((e) => '<option value="' + e.id + '">' + e.title + ' | ' + e.type + ' | ' + formatDate(e.date) + '</option>').join("");
 	if (events.some((e) => e.id === prev)) {
 		studentEventSelect.value = prev;
 	}
@@ -1146,12 +1154,14 @@ async function addOrganizerEvent() {
 	const type = newEventType.value;
 	const title = document.getElementById("newEventTitle").value.trim();
 	const date = document.getElementById("newEventDate").value.trim();
+	const time = newEventTime ? newEventTime.value.trim() : "";
 	const venue = document.getElementById("newEventVenue").value.trim();
 	const capRaw = Number(document.getElementById("newEventCapacity").value.trim());
 	const description = document.getElementById("newEventDescription").value.trim();
 	const registrationUrl = normalizeRegistrationUrl(newEventRegistrationUrl.value);
 	const extra1 = newEventExtra1.value.trim();
 	const extra2 = newEventExtra2.value.trim();
+	const dateTime = date && time ? date + "T" + time : date;
 
 
 
@@ -1159,7 +1169,7 @@ async function addOrganizerEvent() {
 		title,
 		society_id: loggedInOrganizer.id,
 		type,
-		date,
+		date: dateTime,
 		venue,
 		seats: Number.isFinite(capRaw) && capRaw > 0 ? capRaw : 50,
 		description,
