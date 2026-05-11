@@ -201,23 +201,76 @@ function parseDateParts(dateStr) {
 	// Parse only ISO-like values from DB (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss).
 	// Human-readable labels like "Delayed - Originally ..." should be shown as-is.
 	const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::\d{2})?)?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/);
-	if (!isoMatch) return null;
+	if (isoMatch) {
+		const year = Number(isoMatch[1]);
+		const month = Number(isoMatch[2]);
+		const day = Number(isoMatch[3]);
+		const d = new Date(Date.UTC(year, month - 1, day));
+		if (isNaN(d.getTime())) return null;
 
-	const year = Number(isoMatch[1]);
-	const month = Number(isoMatch[2]);
-	const day = Number(isoMatch[3]);
-	const d = new Date(Date.UTC(year, month - 1, day));
-	if (isNaN(d.getTime())) return null;
+		const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+		const dateLabel = d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
+		const hour = Number(isoMatch[4]);
+		const minute = Number(isoMatch[5]);
+		if (Number.isFinite(hour) && Number.isFinite(minute)) {
+			const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+			return { dateLabel, timeLabel };
+		}
+		return { dateLabel, timeLabel: "" };
+	}
 
 	const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	const dateLabel = d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
-	const hour = Number(isoMatch[4]);
-	const minute = Number(isoMatch[5]);
-	if (Number.isFinite(hour) && Number.isFinite(minute)) {
-		const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
-		return { dateLabel, timeLabel };
+	const monthIndexByName = {
+		jan: 0,
+		feb: 1,
+		mar: 2,
+		apr: 3,
+		may: 4,
+		jun: 5,
+		jul: 6,
+		aug: 7,
+		sep: 8,
+		oct: 9,
+		nov: 10,
+		dec: 11
+	};
+
+	const nameMatch = raw.match(/^(\d{1,2})[-\s/]+([A-Za-z]{3,})[-\s/]+(\d{4})(?:[\s,]+(\d{1,2}):(\d{2}))?$/);
+	if (nameMatch) {
+		const day = Number(nameMatch[1]);
+		const monthName = nameMatch[2].slice(0, 3).toLowerCase();
+		const year = Number(nameMatch[3]);
+		const monthIndex = monthIndexByName[monthName];
+		if (Number.isFinite(day) && Number.isFinite(year) && Number.isFinite(monthIndex)) {
+			const dateLabel = day + "-" + months[monthIndex] + "-" + year;
+			const hour = Number(nameMatch[4]);
+			const minute = Number(nameMatch[5]);
+			if (Number.isFinite(hour) && Number.isFinite(minute)) {
+				const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+				return { dateLabel, timeLabel };
+			}
+			return { dateLabel, timeLabel: "" };
+		}
 	}
-	return { dateLabel, timeLabel: "" };
+
+	const numericMatch = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:[T\s](\d{1,2}):(\d{2}))?$/);
+	if (numericMatch) {
+		const day = Number(numericMatch[1]);
+		const monthIndex = Number(numericMatch[2]) - 1;
+		const year = Number(numericMatch[3]);
+		if (Number.isFinite(day) && Number.isFinite(year) && monthIndex >= 0 && monthIndex <= 11) {
+			const dateLabel = day + "-" + months[monthIndex] + "-" + year;
+			const hour = Number(numericMatch[4]);
+			const minute = Number(numericMatch[5]);
+			if (Number.isFinite(hour) && Number.isFinite(minute)) {
+				const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+				return { dateLabel, timeLabel };
+			}
+			return { dateLabel, timeLabel: "" };
+		}
+	}
+
+	return null;
 }
 
 function formatDate(dateStr) {
