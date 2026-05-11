@@ -805,7 +805,7 @@ function renderEventsTable() {
 				"<td data-label=\"Society\">" + e.society + "</td>" +
 				"<td data-label=\"Type\"><span class=\"pill\">" + e.type + "</span></td>" +
 				"<td data-label=\"Date\"><span class=\"pill status-" + (e.status || "").toLowerCase() + "\">" + formatDateOnly(e.date) + "</span></td>" +
-				"<td data-label=\"Time Slot\">" + timeSlotMarkup + "</td>" +
+				"<td data-label=\"Time\">" + timeSlotMarkup + "</td>" +
 				"<td data-label=\"Venue\">" + e.venue + "</td>" +
 				"<td data-label=\"Seats\">" + availableSeats(e) + "</td>" +
 				"<td data-label=\"Avg Rating\">" + avg + "</td>" +
