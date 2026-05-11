@@ -225,6 +225,25 @@ function normalizeEventTitle(title) {
 	return String(title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+function normalizeEventDateTimeForCompare(rawValue) {
+	const raw = String(rawValue || "").trim();
+	if (!raw) {
+		return { dateOnly: "", dateTime: "" };
+	}
+
+	const match = raw.match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
+	if (!match) {
+		return { dateOnly: "", dateTime: "" };
+	}
+
+	const dateOnly = match[1];
+	if (match[2] && match[3]) {
+		return { dateOnly, dateTime: dateOnly + "T" + match[2] + ":" + match[3] };
+	}
+
+	return { dateOnly, dateTime: "" };
+}
+
 function getPinnedEventOverride(title) {
 	const key = normalizeEventTitle(title);
 
@@ -1162,6 +1181,27 @@ async function addOrganizerEvent() {
 	const extra1 = newEventExtra1.value.trim();
 	const extra2 = newEventExtra2.value.trim();
 	const dateTime = date && time ? date + "T" + time : date;
+	const newTitleKey = normalizeEventTitle(title);
+	const newDateKey = normalizeEventDateTimeForCompare(dateTime);
+
+	const hasDuplicate = events.some((event) => {
+		if (event.society_id !== loggedInOrganizer.id) return false;
+		if (normalizeEventTitle(event.title) !== newTitleKey) return false;
+		const existingDateKey = normalizeEventDateTimeForCompare(event.date);
+		if (newDateKey.dateTime && existingDateKey.dateTime) {
+			return existingDateKey.dateTime === newDateKey.dateTime;
+		}
+		if (newDateKey.dateOnly && existingDateKey.dateOnly) {
+			return existingDateKey.dateOnly === newDateKey.dateOnly;
+		}
+		return false;
+	});
+
+	if (hasDuplicate) {
+		toastMsg("Duplicate event found");
+		logLine("Event with same title and date already exists for this society.");
+		return;
+	}
 
 
 
