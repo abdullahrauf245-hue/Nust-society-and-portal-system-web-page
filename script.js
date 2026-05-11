@@ -194,21 +194,20 @@ function logSupabaseNetworkHint() {
 	logLine("Cannot reach Supabase host. Check SUPABASE_URL, internet, DNS, or firewall settings.");
 }
 
-function formatDate(dateStr) {
-	if (!dateStr) return "TBA";
-	const raw = String(dateStr).trim();
-	if (!raw) return "TBA";
+function parseDateParts(dateStr) {
+	const raw = String(dateStr || "").trim();
+	if (!raw) return null;
 
 	// Parse only ISO-like values from DB (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss).
 	// Human-readable labels like "Delayed - Originally ..." should be shown as-is.
 	const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::\d{2})?)?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/);
-	if (!isoMatch) return raw;
+	if (!isoMatch) return null;
 
 	const year = Number(isoMatch[1]);
 	const month = Number(isoMatch[2]);
 	const day = Number(isoMatch[3]);
 	const d = new Date(Date.UTC(year, month - 1, day));
-	if (isNaN(d.getTime())) return raw;
+	if (isNaN(d.getTime())) return null;
 
 	const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	const dateLabel = d.getUTCDate() + "-" + months[d.getUTCMonth()] + "-" + d.getUTCFullYear();
@@ -216,9 +215,35 @@ function formatDate(dateStr) {
 	const minute = Number(isoMatch[5]);
 	if (Number.isFinite(hour) && Number.isFinite(minute)) {
 		const timeLabel = String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
-		return dateLabel + " " + timeLabel;
+		return { dateLabel, timeLabel };
 	}
-	return dateLabel;
+	return { dateLabel, timeLabel: "" };
+}
+
+function formatDate(dateStr) {
+	const parts = parseDateParts(dateStr);
+	if (!parts) {
+		const raw = String(dateStr || "").trim();
+		return raw || "TBA";
+	}
+
+	return parts.timeLabel ? parts.dateLabel + " " + parts.timeLabel : parts.dateLabel;
+}
+
+function formatDateOnly(dateStr) {
+	const parts = parseDateParts(dateStr);
+	if (!parts) {
+		const raw = String(dateStr || "").trim();
+		return raw || "TBA";
+	}
+
+	return parts.dateLabel;
+}
+
+function formatTimeSlot(dateStr) {
+	const parts = parseDateParts(dateStr);
+	if (!parts || !parts.timeLabel) return "TBA";
+	return parts.timeLabel;
 }
 
 function normalizeEventTitle(title) {
@@ -709,13 +734,15 @@ function renderEventsTable() {
 	resultCount.textContent = "Showing " + rows.length + " events";
 
 	if (!rows.length) {
-		eventsTbody.innerHTML = '<tr><td colspan="10">No events found.</td></tr>';
+		eventsTbody.innerHTML = '<tr><td colspan="11">No events found.</td></tr>';
 		return;
 	}
 
 	eventsTbody.innerHTML = rows.map((e, i) => {
 		const avg = REVIEWABLE_TYPES.has(e.type) ? averageRating(e).toFixed(1) : "N/A";
 		const link = e.registration_link ? '<button type="button" class="open-link" data-link="' + e.registration_link + '">Open</button>' : "-";
+		const timeSlot = formatTimeSlot(e.date);
+		const timeSlotMarkup = timeSlot === "TBA" ? '<span class="muted">TBA</span>' : '<span class="pill">' + timeSlot + '</span>';
 		const canDelete = Boolean(loggedInOrganizer) && e.society_id === loggedInOrganizer.id;
 		const manage = canDelete ? '<button type="button" class="delete-event" data-event-id="' + e.id + '">Delete</button>' : "-";
 		return (
@@ -724,7 +751,8 @@ function renderEventsTable() {
 				"<td data-label=\"Title\">" + e.title + "</td>" +
 				"<td data-label=\"Society\">" + e.society + "</td>" +
 				"<td data-label=\"Type\"><span class=\"pill\">" + e.type + "</span></td>" +
-				"<td data-label=\"Date\"><span class=\"pill status-" + (e.status || "").toLowerCase() + "\">" + formatDate(e.date) + "</span></td>" +
+				"<td data-label=\"Date\"><span class=\"pill status-" + (e.status || "").toLowerCase() + "\">" + formatDateOnly(e.date) + "</span></td>" +
+				"<td data-label=\"Time Slot\">" + timeSlotMarkup + "</td>" +
 				"<td data-label=\"Venue\">" + e.venue + "</td>" +
 				"<td data-label=\"Seats\">" + availableSeats(e) + "</td>" +
 				"<td data-label=\"Avg Rating\">" + avg + "</td>" +
